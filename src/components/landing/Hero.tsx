@@ -44,9 +44,9 @@ const Hero = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-4xl md:text-5xl lg:text-6xl font-serif text-foreground leading-tight mb-6"
           >
-            Lend freely.
+            Lend freely. Care deeply.
             <br />
-            <span className="text-primary">Remember kindly.</span>
+            <span className="text-primary">Stay connected.</span>
           </motion.h1>
 
           {/* Subheading */}

@@ -46,7 +46,7 @@ const EarlyAccess = () => {
 
             {/* Content */}
             <h2 className="text-3xl md:text-4xl font-serif text-foreground mb-4">
-              Join the community
+              Start sharing more freely
             </h2>
             <p className="text-lg text-earth-light mb-10 max-w-lg mx-auto">
               We're building Lendlee with care, and we'd love you to be part of it from the start. No spam—just updates when we have something worth sharing.

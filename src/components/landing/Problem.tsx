@@ -60,6 +60,11 @@ const Problem = () => {
                 title: "The accidental keeping",
                 description: "Sometimes we forget we even have something that belongs to someone else.",
               },
+              {
+                emoji: "💚",
+                title: "The easy return",
+                description: "When it comes back naturally. No stress. Just gratitude.",
+              },
             ].map((point, index) => (
               <motion.div
                 key={point.title}

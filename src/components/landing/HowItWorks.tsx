@@ -25,7 +25,7 @@ const HowItWorks = () => {
       icon: CheckCircle,
       step: "4",
       title: "Return & close the loop",
-      description: "When it comes back, mark it returned. Simple. No fuss. Relationship preserved.",
+      description: "When it comes back, mark it returned. Simple. No fuss. Relationship preserved. And generosity keeps flowing.",
     },
   ];
 

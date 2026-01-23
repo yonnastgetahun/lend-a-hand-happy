@@ -6,7 +6,7 @@ const Solution = () => {
     {
       icon: Bell,
       title: "Gentle reminders",
-      description: "Quiet nudges at the right time—for you, not them. No awkward auto-messages.",
+      description: "Quiet nudges at the right time—for you, not them. No awkward automated messages.",
     },
     {
       icon: RefreshCw,
