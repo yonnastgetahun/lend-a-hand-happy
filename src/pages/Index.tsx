@@ -4,7 +4,7 @@ import Solution from "@/components/landing/Solution";
 import HowItWorks from "@/components/landing/HowItWorks";
 import MicroStory from "@/components/landing/MicroStory";
 import Values from "@/components/landing/Values";
-import StartingSmall from "@/components/landing/StartingSmall";
+
 import EarlyAccess from "@/components/landing/EarlyAccess";
 import Footer from "@/components/landing/Footer";
 
@@ -17,7 +17,7 @@ const Index = () => {
       <HowItWorks />
       <MicroStory />
       <Values />
-      <StartingSmall />
+      
       <EarlyAccess />
       <Footer />
     </main>

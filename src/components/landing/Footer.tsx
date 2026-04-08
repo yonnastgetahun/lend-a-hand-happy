@@ -1,4 +1,5 @@
 import { Heart } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -23,12 +24,12 @@ const Footer = () => {
               >
                 About
               </a>
-              <a
-                href="#"
+              <Link
+                to="/privacy"
                 className="text-earth-light hover:text-primary transition-colors"
               >
                 Privacy
-              </a>
+              </Link>
               <a
                 href="#"
                 className="text-earth-light hover:text-primary transition-colors"
