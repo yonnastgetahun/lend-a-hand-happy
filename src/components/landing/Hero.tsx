@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Heart, Users } from "lucide-react";
+import { Heart, Users, Layers } from "lucide-react";
 
 const Hero = () => {
   return (
@@ -82,16 +82,16 @@ const Hero = () => {
             className="mt-16 flex flex-wrap justify-center gap-8 text-muted-foreground"
           >
             <div className="flex items-center gap-2">
-              <BookOpen className="w-5 h-5 text-primary" />
-              <span className="text-sm">Starting with books</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" />
-              <span className="text-sm">Built for community</span>
+              <Layers className="w-5 h-5 text-primary" />
+              <span className="text-sm">Books, Tools, Games & Gear</span>
             </div>
             <div className="flex items-center gap-2">
               <Heart className="w-5 h-5 text-primary" />
               <span className="text-sm">Relationship-first</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-primary" />
+              <span className="text-sm">Built for community</span>
             </div>
           </motion.div>
         </div>
