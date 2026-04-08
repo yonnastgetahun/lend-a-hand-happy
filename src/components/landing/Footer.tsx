@@ -30,6 +30,12 @@ const Footer = () => {
               >
                 Privacy
               </Link>
+              <Link
+                to="/terms"
+                className="text-earth-light hover:text-primary transition-colors"
+              >
+                Terms
+              </Link>
               <a
                 href="#"
                 className="text-earth-light hover:text-primary transition-colors"
