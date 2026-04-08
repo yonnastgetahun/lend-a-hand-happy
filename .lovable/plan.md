@@ -1,16 +1,15 @@
 
 
-## Update Hero Trust Indicator Order
+## Update Third Hero Trust Indicator
 
-**File:** `src/components/landing/Hero.tsx` (lines ~82-100)
+**File:** `src/components/landing/Hero.tsx`
 
-Reorder the three trust indicators from:
-1. Books · 2. Community · 3. Relationship-first
+Change the third trust indicator from **"Built for community"** (with `Users` icon) to **"Private by design"** with a `Shield` icon (from lucide-react).
 
-To:
-1. **"Books, Tools, Games & Gear"** — replace `BookOpen` icon with `Package` or `Layers`
-2. **"Relationship-first"** — with `Heart` icon
-3. **"Built for community"** — with `Users` icon
+The three indicators will read:
+1. "Books, Tools, Games & Gear" — `Layers` icon
+2. "Relationship-first" — `Heart` icon
+3. "Private by design" — `Shield` icon
 
-All styling, animation, and layout unchanged.
+Update imports to replace `Users` with `Shield`. All styling and layout unchanged.
 
