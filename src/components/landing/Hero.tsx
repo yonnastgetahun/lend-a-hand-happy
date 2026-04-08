@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Heart, Users, Layers } from "lucide-react";
+import { Heart, Shield, Layers } from "lucide-react";
 
 const Hero = () => {
   return (
@@ -90,8 +90,8 @@ const Hero = () => {
               <span className="text-sm">Relationship-first</span>
             </div>
             <div className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-primary" />
-              <span className="text-sm">Built for community</span>
+              <Shield className="w-5 h-5 text-primary" />
+              <span className="text-sm">Private by design</span>
             </div>
           </motion.div>
         </div>
