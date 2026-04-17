@@ -1,37 +1,39 @@
 {
   "expo": {
     "name": "Lendlee",
-    "slug": "b9wx4ht33gmk1ulshm8k1",
+    "slug": "lendlee",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "rork-app",
+    "scheme": "lendlee",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#FAF8F5"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "app.rork.b9wx4ht33gmk1ulshm8k1"
+      "bundleIdentifier": "me.lendlee.ios",
+      "buildNumber": "1.0.0"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#FAF8F5"
       },
-      "package": "app.rork.b9wx4ht33gmk1ulshm8k1"
+      "package": "me.lendlee.app"
     },
     "web": {
-      "favicon": "./assets/images/favicon.png"
+      "favicon": "./assets/images/favicon.png",
+      "bundler": "metro"
     },
     "plugins": [
       [
         "expo-router",
         {
-          "origin": "https://rork.com/"
+          "origin": "https://lendlee.com/"
         }
       ],
       "expo-font",
@@ -39,6 +41,9 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "supabaseUrl": "https://divwsajiaxklbuehnzek.supabase.co"
     }
   }
 }

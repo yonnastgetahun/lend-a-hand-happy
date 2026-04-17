@@ -17,6 +17,7 @@ import { Heart, Apple, Chrome } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
 import { supabase } from '@/lib/supabase';
+import * as AppleAuthentication from 'expo-apple-authentication';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState<string>('');
@@ -67,23 +68,42 @@ export default function LoginScreen() {
   // Apple Sign-In (iOS only)
   const handleAppleSignIn = async () => {
     try {
-      // @TODO: Implement Apple Sign-In
-      // This requires:
-      // 1. Apple Developer account ($99/year)
-      // 2. Configure in Supabase Dashboard > Authentication > Providers > Apple
-      // 3. Setup in Xcode: Capabilities > Sign in with Apple
-      // 4. Use expo-apple-authentication or @invertase/react-native-apple-authentication
-      
-      Alert.alert(
-        'Apple Sign-In',
-        'Apple Sign-In requires configuration:\n\n' +
-        '1. Apple Developer Account ($99/year)\n' +
-        '2. Supabase Dashboard configuration\n' +
-        '3. Xcode capabilities setup\n\n' +
-        'See SUPABASE_AUTH_SETUP.md for details.'
-      );
-    } catch (error) {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      if (credential.identityToken) {
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: 'apple',
+          token: credential.identityToken,
+        });
+
+        if (error) throw error;
+        
+        // Create profile for new users
+        if (data.user && credential.fullName) {
+          const fullName = [
+            credential.fullName.givenName,
+            credential.fullName.familyName
+          ].filter(Boolean).join(' ');
+          
+          await supabase.from('profiles').upsert({
+            id: data.user.id,
+            name: fullName || 'Apple User',
+            email: credential.email || data.user.email,
+          });
+        }
+      }
+    } catch (error: any) {
+      if (error.code === 'ERR_REQUEST_CANCELLED') {
+        // User cancelled - no action needed
+        return;
+      }
       console.error('Apple Sign-In error:', error);
+      Alert.alert('Sign In Error', error.message || 'Failed to sign in with Apple');
     }
   };
 
