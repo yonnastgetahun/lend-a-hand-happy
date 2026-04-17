@@ -1,0 +1,63 @@
+{
+  "expo": {
+    "name": "Lendlee",
+    "slug": "lendlee",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F5F2EB"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "app.lendlee.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Lendlee needs camera access to take photos of items you lend.",
+        "NSPhotoLibraryUsageDescription": "Lendlee needs photo library access to select images of items.",
+        "NSContactsUsageDescription": "Lendlee needs contacts access to select who you're lending to."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F5F2EB"
+      },
+      "package": "app.lendlee.mobile",
+      "permissions": [
+        "CAMERA",
+        "READ_CONTACTS",
+        "SEND_NOTIFICATIONS"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Lendlee to access your camera."
+        }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "Allow Lendlee to access your contacts."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#6B8F71"
+        }
+      ]
+    ]
+  }
+}

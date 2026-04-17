@@ -1,0 +1,7 @@
+{
+  "name": "lendlee",
+  "private": true,
+  "engines": {
+    "node": ">=18"
+  }
+}

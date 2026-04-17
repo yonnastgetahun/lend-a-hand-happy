@@ -1,0 +1,7 @@
+/** @type {import('nativewind').RuntimeWindow} */
+self.nativewindEnvironment = {
+  darkMode: "media",
+};
+
+/** @type {import('nativewind').NativeWindObjects} */
+self.nativewindObjects = {};

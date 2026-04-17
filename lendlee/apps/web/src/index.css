@@ -1,0 +1,161 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Lora:ital,wght@0,400..700;1,400..700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Warm, community-centered palette */
+    --background: 40 33% 98%;
+    --foreground: 25 20% 20%;
+
+    --card: 40 40% 99%;
+    --card-foreground: 25 20% 20%;
+
+    --popover: 40 40% 99%;
+    --popover-foreground: 25 20% 20%;
+
+    /* Soft sage green - trust, growth, community */
+    --primary: 145 25% 42%;
+    --primary-foreground: 40 33% 98%;
+
+    /* Warm cream */
+    --secondary: 38 40% 95%;
+    --secondary-foreground: 25 20% 25%;
+
+    /* Muted sage */
+    --muted: 140 15% 92%;
+    --muted-foreground: 25 15% 45%;
+
+    /* Soft terracotta accent - warmth, humanity */
+    --accent: 18 55% 65%;
+    --accent-foreground: 40 33% 98%;
+
+    --destructive: 0 65% 55%;
+    --destructive-foreground: 40 33% 98%;
+
+    --border: 35 25% 88%;
+    --input: 35 25% 88%;
+    --ring: 145 25% 42%;
+
+    --radius: 1rem;
+
+    /* Custom Lendlee tokens */
+    --cream: 40 33% 98%;
+    --cream-dark: 38 30% 94%;
+    --sage: 145 25% 42%;
+    --sage-light: 145 20% 92%;
+    --sage-muted: 145 15% 75%;
+    --terracotta: 18 55% 65%;
+    --terracotta-light: 18 45% 92%;
+    --earth: 25 20% 20%;
+    --earth-light: 25 15% 45%;
+    --warm-white: 40 40% 99%;
+
+    /* Typography */
+    --font-sans: 'DM Sans', system-ui, sans-serif;
+    --font-serif: 'Lora', Georgia, serif;
+
+    /* Shadows */
+    --shadow-soft: 0 2px 12px -2px hsl(25 20% 20% / 0.06);
+    --shadow-medium: 0 8px 24px -4px hsl(25 20% 20% / 0.08);
+    --shadow-glow: 0 0 40px -10px hsl(145 25% 42% / 0.15);
+
+    /* Sidebar (keeping defaults) */
+    --sidebar-background: 40 33% 98%;
+    --sidebar-foreground: 25 20% 20%;
+    --sidebar-primary: 145 25% 42%;
+    --sidebar-primary-foreground: 40 33% 98%;
+    --sidebar-accent: 38 40% 95%;
+    --sidebar-accent-foreground: 25 20% 25%;
+    --sidebar-border: 35 25% 88%;
+    --sidebar-ring: 145 25% 42%;
+  }
+
+  .dark {
+    --background: 25 18% 12%;
+    --foreground: 40 33% 95%;
+
+    --card: 25 15% 15%;
+    --card-foreground: 40 33% 95%;
+
+    --popover: 25 15% 15%;
+    --popover-foreground: 40 33% 95%;
+
+    --primary: 145 30% 55%;
+    --primary-foreground: 25 18% 12%;
+
+    --secondary: 25 15% 18%;
+    --secondary-foreground: 40 33% 95%;
+
+    --muted: 25 15% 22%;
+    --muted-foreground: 40 20% 65%;
+
+    --accent: 18 50% 60%;
+    --accent-foreground: 25 18% 12%;
+
+    --destructive: 0 60% 50%;
+    --destructive-foreground: 40 33% 95%;
+
+    --border: 25 12% 25%;
+    --input: 25 12% 25%;
+    --ring: 145 30% 55%;
+
+    --cream: 25 18% 12%;
+    --cream-dark: 25 15% 10%;
+    --sage: 145 30% 55%;
+    --sage-light: 145 15% 20%;
+    --sage-muted: 145 20% 35%;
+    --terracotta: 18 50% 60%;
+    --terracotta-light: 18 30% 20%;
+    --earth: 40 33% 95%;
+    --earth-light: 40 20% 65%;
+    --warm-white: 25 15% 15%;
+
+    --sidebar-background: 25 18% 12%;
+    --sidebar-foreground: 40 33% 95%;
+    --sidebar-primary: 145 30% 55%;
+    --sidebar-primary-foreground: 25 18% 12%;
+    --sidebar-accent: 25 15% 18%;
+    --sidebar-accent-foreground: 40 33% 95%;
+    --sidebar-border: 25 12% 25%;
+    --sidebar-ring: 145 30% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-serif;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .gradient-sage {
+    background: linear-gradient(135deg, hsl(var(--sage-light)) 0%, hsl(var(--cream)) 100%);
+  }
+
+  .gradient-terracotta {
+    background: linear-gradient(135deg, hsl(var(--terracotta-light)) 0%, hsl(var(--cream)) 100%);
+  }
+
+  .gradient-warm {
+    background: linear-gradient(180deg, hsl(var(--cream)) 0%, hsl(var(--cream-dark)) 100%);
+  }
+}
