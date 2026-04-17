@@ -33,7 +33,7 @@
       [
         "expo-router",
         {
-          "origin": "https://lendlee.com/"
+          "origin": "https://lendlee.com"
         }
       ],
       "expo-font",
