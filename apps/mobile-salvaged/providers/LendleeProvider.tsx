@@ -1,13 +1,8 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase, getCurrentUser, Tables, InsertTables, UpdateTables } from '@/lib/supabase';
+import { useAuth } from './AuthProvider';
 import { Item, Loan, Contact, Give } from '@/types';
-import { mockItems, mockLoans, mockGives } from '@/mocks/items';
-import { mockContacts } from '@/mocks/contacts';
-
-const ITEMS_KEY = 'lendlee_items';
-const LOANS_KEY = 'lendlee_loans';
-const GIVES_KEY = 'lendlee_gives';
+import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
 
 // Define the context type
 interface LendleeContextType {
@@ -23,13 +18,20 @@ interface LendleeContextType {
     activeLoans: number;
   };
   isLoading: boolean;
+  isOffline: boolean;
   addItem: (item: Omit<Item, 'id' | 'createdAt' | 'ownerId' | 'status'>) => Promise<void>;
+  updateItem: (id: string, updates: Partial<Item>) => Promise<void>;
+  deleteItem: (id: string) => Promise<void>;
   lendItem: (params: { itemId: string; contactId: string; returnBy?: string }) => Promise<void>;
-  giveItem: (params: { itemId: string; contactId: string }) => Promise<void>;
+  giveItem: (params: { itemId: string; contactId: string; notes?: string }) => Promise<void>;
   markReturned: (loanId: string) => Promise<void>;
+  addContact: (contact: Omit<Contact, 'id' | 'createdAt' | 'ownerId'>) => Promise<void>;
+  updateContact: (id: string, updates: Partial<Contact>) => Promise<void>;
+  deleteContact: (id: string) => Promise<void>;
   getContactById: (id: string) => Contact | undefined;
   getItemById: (id: string) => Item | undefined;
   getActiveLoanForItem: (itemId: string) => Loan | undefined;
+  refreshData: () => Promise<void>;
   isAddingItem: boolean;
   isLending: boolean;
   isGiving: boolean;
@@ -40,178 +42,352 @@ const LendleeContext = createContext<LendleeContextType | null>(null);
 
 // Provider component
 export function LendleeProvider({ children }: { children: React.ReactNode }) {
+  const { user } = useAuth();
   const [items, setItems] = useState<Item[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
   const [gives, setGives] = useState<Give[]>([]);
-  const queryClient = useQueryClient();
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
+  const [isAddingItem, setIsAddingItem] = useState(false);
+  const [isLending, setIsLending] = useState(false);
+  const [isGiving, setIsGiving] = useState(false);
 
-  const itemsQuery = useQuery({
-    queryKey: ['items'],
-    queryFn: async () => {
-      const stored = await AsyncStorage.getItem(ITEMS_KEY);
-      if (stored) return JSON.parse(stored) as Item[];
-      await AsyncStorage.setItem(ITEMS_KEY, JSON.stringify(mockItems));
-      return mockItems;
-    },
-  });
+  // Fetch all data from Supabase
+  const fetchData = useCallback(async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      
+      // Fetch items
+      const { data: itemsData, error: itemsError } = await supabase
+        .from('items')
+        .select('*')
+        .eq('owner_id', user.id)
+        .order('created_at', { ascending: false });
+      
+      if (itemsError) throw itemsError;
+      
+      // Fetch contacts
+      const { data: contactsData, error: contactsError } = await supabase
+        .from('contacts')
+        .select('*')
+        .eq('owner_id', user.id)
+        .order('name', { ascending: true });
+      
+      if (contactsError) throw contactsError;
+      
+      // Fetch loans (with joins for full data)
+      const { data: loansData, error: loansError } = await supabase
+        .from('loans')
+        .select(`
+          *,
+          items:item_id (*),
+          contacts:contact_id (*)
+        `)
+        .order('lent_at', { ascending: false });
+      
+      if (loansError) throw loansError;
+      
+      // Fetch gives
+      const { data: givesData, error: givesError } = await supabase
+        .from('gives')
+        .select(`
+          *,
+          items:item_id (*),
+          contacts:contact_id (*)
+        `)
+        .order('given_at', { ascending: false });
+      
+      if (givesError) throw givesError;
+      
+      setItems(itemsData || []);
+      setContacts(contactsData || []);
+      setLoans(loansData || []);
+      setGives(givesData || []);
+      setIsOffline(false);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+      setIsOffline(true);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [user]);
 
-  const loansQuery = useQuery({
-    queryKey: ['loans'],
-    queryFn: async () => {
-      const stored = await AsyncStorage.getItem(LOANS_KEY);
-      if (stored) return JSON.parse(stored) as Loan[];
-      await AsyncStorage.setItem(LOANS_KEY, JSON.stringify(mockLoans));
-      return mockLoans;
-    },
-  });
-
-  const givesQuery = useQuery({
-    queryKey: ['gives'],
-    queryFn: async () => {
-      const stored = await AsyncStorage.getItem(GIVES_KEY);
-      if (stored) return JSON.parse(stored) as Give[];
-      await AsyncStorage.setItem(GIVES_KEY, JSON.stringify(mockGives));
-      return mockGives;
-    },
-  });
-
+  // Initial data load
   useEffect(() => {
-    if (itemsQuery.data) setItems(itemsQuery.data);
-  }, [itemsQuery.data]);
+    fetchData();
+  }, [fetchData]);
 
+  // Subscribe to real-time changes
   useEffect(() => {
-    if (loansQuery.data) setLoans(loansQuery.data);
-  }, [loansQuery.data]);
+    if (!user) return;
+    
+    // Subscribe to items changes
+    const itemsSubscription = supabase
+      .channel('items_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'items', filter: `owner_id=eq.${user.id}` },
+        (payload: RealtimePostgresChangesPayload<any>) => {
+          if (payload.eventType === 'INSERT') {
+            setItems(prev => [payload.new as Item, ...prev]);
+          } else if (payload.eventType === 'UPDATE') {
+            setItems(prev => prev.map(item => 
+              item.id === payload.new.id ? payload.new as Item : item
+            ));
+          } else if (payload.eventType === 'DELETE') {
+            setItems(prev => prev.filter(item => item.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
+    
+    // Subscribe to loans changes
+    const loansSubscription = supabase
+      .channel('loans_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'loans' },
+        () => {
+          // Refresh loans data to get full relations
+          fetchData();
+        }
+      )
+      .subscribe();
+    
+    // Subscribe to gives changes
+    const givesSubscription = supabase
+      .channel('gives_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'gives' },
+        () => {
+          fetchData();
+        }
+      )
+      .subscribe();
+    
+    // Subscribe to contacts changes
+    const contactsSubscription = supabase
+      .channel('contacts_changes')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'contacts', filter: `owner_id=eq.${user.id}` },
+        (payload: RealtimePostgresChangesPayload<any>) => {
+          if (payload.eventType === 'INSERT') {
+            setContacts(prev => [...prev, payload.new as Contact]);
+          } else if (payload.eventType === 'UPDATE') {
+            setContacts(prev => prev.map(contact => 
+              contact.id === payload.new.id ? payload.new as Contact : contact
+            ));
+          } else if (payload.eventType === 'DELETE') {
+            setContacts(prev => prev.filter(contact => contact.id !== payload.old.id));
+          }
+        }
+      )
+      .subscribe();
 
-  useEffect(() => {
-    if (givesQuery.data) setGives(givesQuery.data);
-  }, [givesQuery.data]);
+    return () => {
+      itemsSubscription.unsubscribe();
+      loansSubscription.unsubscribe();
+      givesSubscription.unsubscribe();
+      contactsSubscription.unsubscribe();
+    };
+  }, [user, fetchData]);
 
-  const persistItems = useCallback(async (updated: Item[]) => {
-    await AsyncStorage.setItem(ITEMS_KEY, JSON.stringify(updated));
-    return updated;
-  }, []);
-
-  const persistLoans = useCallback(async (updated: Loan[]) => {
-    await AsyncStorage.setItem(LOANS_KEY, JSON.stringify(updated));
-    return updated;
-  }, []);
-
-  const persistGives = useCallback(async (updated: Give[]) => {
-    await AsyncStorage.setItem(GIVES_KEY, JSON.stringify(updated));
-    return updated;
-  }, []);
-
-  const addItemMutation = useMutation({
-    mutationFn: async (item: Omit<Item, 'id' | 'createdAt' | 'ownerId' | 'status'>) => {
-      const newItem: Item = {
-        ...item,
-        id: `i_${Date.now()}`,
+  // Add new item
+  const addItem = useCallback(async (item: Omit<Item, 'id' | 'createdAt' | 'ownerId' | 'status'>) => {
+    if (!user) return;
+    
+    setIsAddingItem(true);
+    try {
+      const newItem: InsertTables<'items'> = {
+        owner_id: user.id,
+        title: item.title,
+        description: item.description || null,
+        notes: item.notes || null,
+        category: item.category,
+        photo_url: item.photo || null,
+        condition: item.condition || null,
+        value: item.value || null,
         status: 'available',
-        createdAt: new Date().toISOString(),
-        ownerId: 'u1',
       };
-      const updated = [...items, newItem];
-      await persistItems(updated);
-      return { updated, newItem };
-    },
-    onSuccess: ({ updated }) => {
-      setItems(updated);
-      queryClient.setQueryData(['items'], updated);
-    },
-  });
+      
+      const { error } = await supabase
+        .from('items')
+        .insert(newItem);
+      
+      if (error) throw error;
+      
+      // Real-time subscription will update the list
+    } catch (error) {
+      console.error('Error adding item:', error);
+      throw error;
+    } finally {
+      setIsAddingItem(false);
+    }
+  }, [user]);
 
-  const lendItemMutation = useMutation({
-    mutationFn: async ({
-      itemId,
-      contactId,
-      returnBy,
-    }: {
-      itemId: string;
-      contactId: string;
-      returnBy?: string;
-    }) => {
-      const updatedItems = items.map((i) =>
-        i.id === itemId ? { ...i, status: 'lent' as const } : i
-      );
-      const newLoan: Loan = {
-        id: `l_${Date.now()}`,
-        itemId,
-        contactId,
-        lentAt: new Date().toISOString(),
-        returnBy,
+  // Update item
+  const updateItem = useCallback(async (id: string, updates: Partial<Item>) => {
+    try {
+      const { error } = await supabase
+        .from('items')
+        .update(updates)
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating item:', error);
+      throw error;
+    }
+  }, []);
+
+  // Delete item
+  const deleteItem = useCallback(async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('items')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting item:', error);
+      throw error;
+    }
+  }, []);
+
+  // Lend item
+  const lendItem = useCallback(async ({ itemId, contactId, returnBy }: 
+    { itemId: string; contactId: string; returnBy?: string }) => {
+    setIsLending(true);
+    try {
+      const newLoan: InsertTables<'loans'> = {
+        item_id: itemId,
+        contact_id: contactId,
+        return_by: returnBy || null,
         status: 'active',
       };
-      const updatedLoans = [...loans, newLoan];
-      await persistItems(updatedItems);
-      await persistLoans(updatedLoans);
-      return { updatedItems, updatedLoans };
-    },
-    onSuccess: ({ updatedItems, updatedLoans }) => {
-      setItems(updatedItems);
-      setLoans(updatedLoans);
-      queryClient.setQueryData(['items'], updatedItems);
-      queryClient.setQueryData(['loans'], updatedLoans);
-    },
-  });
+      
+      const { error } = await supabase
+        .from('loans')
+        .insert(newLoan);
+      
+      if (error) throw error;
+      
+      // Trigger will update item status to 'lent'
+    } catch (error) {
+      console.error('Error lending item:', error);
+      throw error;
+    } finally {
+      setIsLending(false);
+    }
+  }, []);
 
-  const markReturnedMutation = useMutation({
-    mutationFn: async (loanId: string) => {
-      const loan = loans.find((l) => l.id === loanId);
-      if (!loan) throw new Error('Loan not found');
-
-      const updatedLoans = loans.map((l) =>
-        l.id === loanId
-          ? { ...l, status: 'returned' as const, returnedAt: new Date().toISOString() }
-          : l
-      );
-      const updatedItems = items.map((i) =>
-        i.id === loan.itemId ? { ...i, status: 'available' as const } : i
-      );
-      await persistItems(updatedItems);
-      await persistLoans(updatedLoans);
-      return { updatedItems, updatedLoans };
-    },
-    onSuccess: ({ updatedItems, updatedLoans }) => {
-      setItems(updatedItems);
-      setLoans(updatedLoans);
-      queryClient.setQueryData(['items'], updatedItems);
-      queryClient.setQueryData(['loans'], updatedLoans);
-    },
-  });
-
-  const giveItemMutation = useMutation({
-    mutationFn: async ({
-      itemId,
-      contactId,
-    }: {
-      itemId: string;
-      contactId: string;
-    }) => {
-      const updatedItems = items.map((i) =>
-        i.id === itemId ? { ...i, status: 'given' as const } : i
-      );
-      const newGive: Give = {
-        id: `g_${Date.now()}`,
-        itemId,
-        contactId,
-        givenAt: new Date().toISOString(),
+  // Give item
+  const giveItem = useCallback(async ({ itemId, contactId, notes }: 
+    { itemId: string; contactId: string; notes?: string }) => {
+    setIsGiving(true);
+    try {
+      const newGive: InsertTables<'gives'> = {
+        item_id: itemId,
+        contact_id: contactId,
+        notes: notes || null,
       };
-      const updatedGives = [...gives, newGive];
-      await persistItems(updatedItems);
-      await persistGives(updatedGives);
-      return { updatedItems, updatedGives };
-    },
-    onSuccess: ({ updatedItems, updatedGives }) => {
-      setItems(updatedItems);
-      setGives(updatedGives);
-      queryClient.setQueryData(['items'], updatedItems);
-      queryClient.setQueryData(['gives'], updatedGives);
-    },
-  });
+      
+      const { error } = await supabase
+        .from('gives')
+        .insert(newGive);
+      
+      if (error) throw error;
+      
+      // Trigger will update item status to 'given'
+    } catch (error) {
+      console.error('Error giving item:', error);
+      throw error;
+    } finally {
+      setIsGiving(false);
+    }
+  }, []);
 
-  const contacts: Contact[] = mockContacts;
+  // Mark loan as returned
+  const markReturned = useCallback(async (loanId: string) => {
+    try {
+      const { error } = await supabase
+        .from('loans')
+        .update({
+          status: 'returned',
+          returned_at: new Date().toISOString(),
+        })
+        .eq('id', loanId);
+      
+      if (error) throw error;
+      
+      // Trigger will update item status to 'available'
+    } catch (error) {
+      console.error('Error marking returned:', error);
+      throw error;
+    }
+  }, []);
 
+  // Add contact
+  const addContact = useCallback(async (contact: Omit<Contact, 'id' | 'createdAt' | 'ownerId'>) => {
+    if (!user) return;
+    
+    try {
+      const newContact: InsertTables<'contacts'> = {
+        owner_id: user.id,
+        name: contact.name,
+        phone: contact.phone || null,
+        email: contact.email || null,
+        avatar_url: contact.avatar || null,
+        notes: contact.notes || null,
+        how_met: contact.howMet || null,
+        tags: contact.tags || null,
+        reliability: contact.reliability || null,
+      };
+      
+      const { error } = await supabase
+        .from('contacts')
+        .insert(newContact);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error adding contact:', error);
+      throw error;
+    }
+  }, [user]);
+
+  // Update contact
+  const updateContact = useCallback(async (id: string, updates: Partial<Contact>) => {
+    try {
+      const { error } = await supabase
+        .from('contacts')
+        .update(updates)
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error updating contact:', error);
+      throw error;
+    }
+  }, []);
+
+  // Delete contact
+  const deleteContact = useCallback(async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('contacts')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    } catch (error) {
+      console.error('Error deleting contact:', error);
+      throw error;
+    }
+  }, []);
+
+  // Getters
   const getContactById = useCallback(
     (id: string) => contacts.find((c) => c.id === id),
     [contacts]
@@ -227,6 +403,7 @@ export function LendleeProvider({ children }: { children: React.ReactNode }) {
     [loans]
   );
 
+  // Stats calculation
   const stats = useMemo(() => ({
     total: items.length,
     available: items.filter((i) => i.status === 'available').length,
@@ -241,23 +418,30 @@ export function LendleeProvider({ children }: { children: React.ReactNode }) {
     gives,
     contacts,
     stats,
-    isLoading: itemsQuery.isLoading || loansQuery.isLoading || givesQuery.isLoading,
-    addItem: addItemMutation.mutateAsync,
-    lendItem: lendItemMutation.mutateAsync,
-    giveItem: giveItemMutation.mutateAsync,
-    markReturned: markReturnedMutation.mutateAsync,
+    isLoading,
+    isOffline,
+    addItem,
+    updateItem,
+    deleteItem,
+    lendItem,
+    giveItem,
+    markReturned,
+    addContact,
+    updateContact,
+    deleteContact,
     getContactById,
     getItemById,
     getActiveLoanForItem,
-    isAddingItem: addItemMutation.isPending,
-    isLending: lendItemMutation.isPending,
-    isGiving: giveItemMutation.isPending,
+    refreshData: fetchData,
+    isAddingItem,
+    isLending,
+    isGiving,
   }), [
-    items, loans, gives, contacts, stats,
-    itemsQuery.isLoading, loansQuery.isLoading, givesQuery.isLoading,
-    addItemMutation.mutateAsync, lendItemMutation.mutateAsync, giveItemMutation.mutateAsync, markReturnedMutation.mutateAsync,
-    getContactById, getItemById, getActiveLoanForItem,
-    addItemMutation.isPending, lendItemMutation.isPending, giveItemMutation.isPending,
+    items, loans, gives, contacts, stats, isLoading, isOffline,
+    addItem, updateItem, deleteItem, lendItem, giveItem, markReturned,
+    addContact, updateContact, deleteContact,
+    getContactById, getItemById, getActiveLoanForItem, fetchData,
+    isAddingItem, isLending, isGiving,
   ]);
 
   return (

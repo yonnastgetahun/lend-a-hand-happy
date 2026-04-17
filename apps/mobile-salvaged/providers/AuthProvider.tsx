@@ -1,18 +1,19 @@
-import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { User } from '@/types';
-
-const AUTH_KEY = 'lendlee_auth';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase';
+import { User, AuthError } from '@supabase/supabase-js';
 
 // Define the context type
 interface AuthContextType {
   user: User | null;
   isReady: boolean;
   isLoggedIn: boolean;
-  login: ({ email, name }: { email: string; name: string }) => void;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<{ error: AuthError | null }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: AuthError | null }>;
+  logout: () => Promise<void>;
   isLoggingIn: boolean;
+  isSigningUp: boolean;
+  authError: string | null;
+  clearError: () => void;
 }
 
 // Create the context
@@ -22,57 +23,130 @@ const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isReady, setIsReady] = useState<boolean>(false);
-  const queryClient = useQueryClient();
+  const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
+  const [isSigningUp, setIsSigningUp] = useState<boolean>(false);
+  const [authError, setAuthError] = useState<string | null>(null);
 
-  const authQuery = useQuery({
-    queryKey: ['auth'],
-    queryFn: async () => {
-      const stored = await AsyncStorage.getItem(AUTH_KEY);
-      return stored ? (JSON.parse(stored) as User) : null;
-    },
-  });
-
+  // Check for existing session on mount
   useEffect(() => {
-    if (authQuery.isFetched) {
-      setUser(authQuery.data ?? null);
-      setIsReady(true);
-    }
-  }, [authQuery.data, authQuery.isFetched]);
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user ?? null);
+      } catch (error) {
+        console.error('Error checking session:', error);
+      } finally {
+        setIsReady(true);
+      }
+    };
 
-  const loginMutation = useMutation({
-    mutationFn: async ({ email, name }: { email: string; name: string }) => {
-      const newUser: User = {
-        id: 'u1',
-        name,
+    checkSession();
+
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Login with email/password
+  const login = async (email: string, password: string) => {
+    setIsLoggingIn(true);
+    setAuthError(null);
+    
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
         email,
-      };
-      await AsyncStorage.setItem(AUTH_KEY, JSON.stringify(newUser));
-      return newUser;
-    },
-    onSuccess: (data) => {
-      setUser(data);
-      queryClient.setQueryData(['auth'], data);
-    },
-  });
+        password,
+      });
+      
+      if (error) {
+        setAuthError(error.message);
+        return { error };
+      }
+      
+      return { error: null };
+    } catch (error: any) {
+      setAuthError(error?.message || 'Login failed');
+      return { error };
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
 
-  const logoutMutation = useMutation({
-    mutationFn: async () => {
-      await AsyncStorage.removeItem(AUTH_KEY);
-    },
-    onSuccess: () => {
-      setUser(null);
-      queryClient.setQueryData(['auth'], null);
-    },
-  });
+  // Sign up with email/password
+  const signUp = async (email: string, password: string, name: string) => {
+    setIsSigningUp(true);
+    setAuthError(null);
+    
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name,
+          },
+        },
+      });
+      
+      if (error) {
+        setAuthError(error.message);
+        return { error };
+      }
 
-  const value = useMemo(() => ({
+      // Create profile record
+      if (data.user) {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            name,
+            email,
+          });
+        
+        if (profileError) {
+          console.error('Error creating profile:', profileError);
+        }
+      }
+      
+      return { error: null };
+    } catch (error: any) {
+      setAuthError(error?.message || 'Sign up failed');
+      return { error };
+    } finally {
+      setIsSigningUp(false);
+    }
+  };
+
+  // Logout
+  const logout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
+  const clearError = () => setAuthError(null);
+
+  const value = {
     user,
     isReady,
     isLoggedIn: !!user,
-    login: loginMutation.mutate,
-    logout: logoutMutation.mutate,
-    isLoggingIn: loginMutation.isPending,
-  }), [user, isReady, loginMutation.mutate, logoutMutation.mutate, loginMutation.isPending]);
+    login,
+    signUp,
+    logout,
+    isLoggingIn,
+    isSigningUp,
+    authError,
+    clearError,
+  };
 
   return (
     <AuthContext.Provider value={value}>
