@@ -1,73 +1,73 @@
-# Welcome to your Lovable project
+# Lendlee
 
-## Project info
+**Lend freely. Care deeply. Stay connected.**
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+A community-centered app for gently tracking person-to-person lending of books and personal items. Inspired by the Buy Nothing movement, Lendlee helps generosity stay joyful and relationships stay whole.
 
-## How can I edit this code?
+## Tech Stack
 
-There are several ways of editing your application.
+- **Framework**: React 18 + TypeScript
+- **Build Tool**: Vite
+- **Styling**: Tailwind CSS
+- **UI Components**: shadcn/ui (Radix UI primitives)
+- **Routing**: React Router DOM
+- **Animations**: Framer Motion
+- **Icons**: Lucide React
 
-**Use Lovable**
+## Getting Started
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+### Prerequisites
 
-Changes made via Lovable will be committed automatically to this repo.
+- Node.js 18+ and npm
 
-**Use your preferred IDE**
+### Installation
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```bash
+npm install
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Development
 
-Follow these steps:
-
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Open [http://localhost:8080](http://localhost:8080) in your browser.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Build
 
-**Use GitHub Codespaces**
+```bash
+npm run build
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Preview Production Build
 
-## What technologies are used for this project?
+```bash
+npm run preview
+```
 
-This project is built with:
+## Project Structure
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+```
+src/
+├── components/
+│   ├── landing/     # Landing page sections
+│   └── ui/          # shadcn/ui component library
+├── pages/           # Route pages
+├── hooks/           # Custom React hooks
+├── lib/             # Utilities
+└── App.tsx          # Main app component
+```
 
-## How can I deploy this project?
+## Vision
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
+Lendlee is building:
 
-## Can I connect a custom domain to my Lovable project?
+- A small beautiful utility (daily lending habit)
+- Mutual aid infrastructure (resilience layer)
+- A cultural movement (values moat)
+- Protocol > Platform (users control their own circles)
 
-Yes, you can!
+## License
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+MIT
