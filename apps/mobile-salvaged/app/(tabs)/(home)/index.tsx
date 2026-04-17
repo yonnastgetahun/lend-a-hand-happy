@@ -16,6 +16,7 @@ import { Item } from '@/types';
 
 export default function HomeScreen() {
   const { items, stats, isLoading } = useLendlee();
+  const { total, available, lent, given } = stats;
   const router = useRouter();
 
   const handleItemPress = useCallback((item: Item) => {
@@ -44,17 +45,23 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <View style={styles.statsRow}>
         <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{stats.total}</Text>
+          <Text style={styles.statNumber}>{total}</Text>
           <Text style={styles.statLabel}>Items</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={[styles.statNumber, { color: Colors.primary }]}>{stats.available}</Text>
+          <Text style={[styles.statNumber, { color: Colors.primary }]}>{available}</Text>
           <Text style={styles.statLabel}>Home</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={[styles.statNumber, { color: '#E65100' }]}>{stats.lent}</Text>
+          <Text style={[styles.statNumber, { color: '#E65100' }]}>{lent}</Text>
           <Text style={styles.statLabel}>Lent</Text>
         </View>
+        {given > 0 && (
+          <View style={styles.statCard}>
+            <Text style={[styles.statNumber, { color: Colors.accent }]}>{given}</Text>
+            <Text style={styles.statLabel}>Given</Text>
+          </View>
+        )}
       </View>
 
       <FlatList

@@ -1,4 +1,4 @@
-import { Item, Loan } from '@/types';
+import { Item, Loan, Give } from '@/types';
 
 export const mockItems: Item[] = [
   {
@@ -68,5 +68,14 @@ export const mockLoans: Loan[] = [
     returnBy: '2025-12-20T11:00:00Z',
     returnedAt: '2025-12-18T15:30:00Z',
     status: 'returned',
+  },
+];
+
+export const mockGives: Give[] = [
+  {
+    id: 'g1',
+    itemId: 'i6',
+    contactId: 'c4',
+    givenAt: '2025-11-20T14:00:00Z',
   },
 ];

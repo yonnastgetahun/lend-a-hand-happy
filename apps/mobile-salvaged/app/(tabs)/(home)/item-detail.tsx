@@ -10,7 +10,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Stack } from 'expo-router';
 import { Image } from 'expo-image';
-import { ArrowRightLeft, RotateCcw, Clock } from 'lucide-react-native';
+import { ArrowRightLeft, RotateCcw, Clock, Gift } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useLendlee } from '@/providers/LendleeProvider';
 import { categoryConfig } from '@/utils/categories';
@@ -36,7 +36,11 @@ export default function ItemDetailScreen() {
   const category = categoryConfig[item.category];
 
   const handleLend = () => {
-    router.push({ pathname: '/select-contact', params: { itemId: item.id } });
+    router.push({ pathname: '/select-contact', params: { itemId: item.id, mode: 'lend' } });
+  };
+
+  const handleGive = () => {
+    router.push({ pathname: '/select-contact', params: { itemId: item.id, mode: 'give' } });
   };
 
   const handleReturn = () => {
@@ -101,15 +105,27 @@ export default function ItemDetailScreen() {
 
       <View style={styles.actions}>
         {item.status === 'available' && (
-          <TouchableOpacity
-            style={styles.lendButton}
-            onPress={handleLend}
-            activeOpacity={0.8}
-            testID="lend-button"
-          >
-            <ArrowRightLeft size={20} color={Colors.cream} />
-            <Text style={styles.lendButtonText}>Lend This Item</Text>
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              style={styles.lendButton}
+              onPress={handleLend}
+              activeOpacity={0.8}
+              testID="lend-button"
+            >
+              <ArrowRightLeft size={20} color={Colors.cream} />
+              <Text style={styles.lendButtonText}>Lend This Item</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.giveButton}
+              onPress={handleGive}
+              activeOpacity={0.8}
+              testID="give-button"
+            >
+              <Gift size={20} color={Colors.accent} />
+              <Text style={styles.giveButtonText}>Give Away</Text>
+            </TouchableOpacity>
+          </>
         )}
 
         {item.status === 'lent' && activeLoan && (
@@ -122,6 +138,13 @@ export default function ItemDetailScreen() {
             <RotateCcw size={20} color={Colors.primary} />
             <Text style={styles.returnButtonText}>Mark as Returned</Text>
           </TouchableOpacity>
+        )}
+
+        {item.status === 'given' && (
+          <View style={styles.givenBadge}>
+            <Gift size={16} color={Colors.accent} />
+            <Text style={styles.givenText}>Given Away</Text>
+          </View>
         )}
       </View>
     </ScrollView>
@@ -276,5 +299,38 @@ const styles = StyleSheet.create({
     fontSize: 17,
     fontWeight: '600' as const,
     color: Colors.primary,
+  },
+  giveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: Colors.warmWhite,
+    borderRadius: 14,
+    paddingVertical: 18,
+    borderWidth: 1,
+    borderColor: Colors.accentLight,
+  },
+  giveButtonText: {
+    fontSize: 17,
+    fontWeight: '600' as const,
+    color: Colors.accent,
+  },
+  givenBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: Colors.cream,
+    borderRadius: 14,
+    paddingVertical: 18,
+    borderWidth: 1,
+    borderColor: Colors.accentLight,
+    borderStyle: 'dashed' as const,
+  },
+  givenText: {
+    fontSize: 17,
+    fontWeight: '600' as const,
+    color: Colors.accent,
   },
 });

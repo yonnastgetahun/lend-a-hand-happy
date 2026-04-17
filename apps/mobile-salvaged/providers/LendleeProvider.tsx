@@ -1,33 +1,38 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Item, Loan, Contact } from '@/types';
-import { mockItems, mockLoans } from '@/mocks/items';
+import { Item, Loan, Contact, Give } from '@/types';
+import { mockItems, mockLoans, mockGives } from '@/mocks/items';
 import { mockContacts } from '@/mocks/contacts';
 
 const ITEMS_KEY = 'lendlee_items';
 const LOANS_KEY = 'lendlee_loans';
+const GIVES_KEY = 'lendlee_gives';
 
 // Define the context type
 interface LendleeContextType {
   items: Item[];
   loans: Loan[];
+  gives: Give[];
   contacts: Contact[];
   stats: {
     total: number;
     available: number;
     lent: number;
+    given: number;
     activeLoans: number;
   };
   isLoading: boolean;
   addItem: (item: Omit<Item, 'id' | 'createdAt' | 'ownerId' | 'status'>) => Promise<void>;
   lendItem: (params: { itemId: string; contactId: string; returnBy?: string }) => Promise<void>;
+  giveItem: (params: { itemId: string; contactId: string }) => Promise<void>;
   markReturned: (loanId: string) => Promise<void>;
   getContactById: (id: string) => Contact | undefined;
   getItemById: (id: string) => Item | undefined;
   getActiveLoanForItem: (itemId: string) => Loan | undefined;
   isAddingItem: boolean;
   isLending: boolean;
+  isGiving: boolean;
 }
 
 // Create the context
@@ -37,6 +42,7 @@ const LendleeContext = createContext<LendleeContextType | null>(null);
 export function LendleeProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<Item[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
+  const [gives, setGives] = useState<Give[]>([]);
   const queryClient = useQueryClient();
 
   const itemsQuery = useQuery({
@@ -59,6 +65,16 @@ export function LendleeProvider({ children }: { children: React.ReactNode }) {
     },
   });
 
+  const givesQuery = useQuery({
+    queryKey: ['gives'],
+    queryFn: async () => {
+      const stored = await AsyncStorage.getItem(GIVES_KEY);
+      if (stored) return JSON.parse(stored) as Give[];
+      await AsyncStorage.setItem(GIVES_KEY, JSON.stringify(mockGives));
+      return mockGives;
+    },
+  });
+
   useEffect(() => {
     if (itemsQuery.data) setItems(itemsQuery.data);
   }, [itemsQuery.data]);
@@ -67,6 +83,10 @@ export function LendleeProvider({ children }: { children: React.ReactNode }) {
     if (loansQuery.data) setLoans(loansQuery.data);
   }, [loansQuery.data]);
 
+  useEffect(() => {
+    if (givesQuery.data) setGives(givesQuery.data);
+  }, [givesQuery.data]);
+
   const persistItems = useCallback(async (updated: Item[]) => {
     await AsyncStorage.setItem(ITEMS_KEY, JSON.stringify(updated));
     return updated;
@@ -74,6 +94,11 @@ export function LendleeProvider({ children }: { children: React.ReactNode }) {
 
   const persistLoans = useCallback(async (updated: Loan[]) => {
     await AsyncStorage.setItem(LOANS_KEY, JSON.stringify(updated));
+    return updated;
+  }, []);
+
+  const persistGives = useCallback(async (updated: Give[]) => {
+    await AsyncStorage.setItem(GIVES_KEY, JSON.stringify(updated));
     return updated;
   }, []);
 
@@ -155,6 +180,36 @@ export function LendleeProvider({ children }: { children: React.ReactNode }) {
     },
   });
 
+  const giveItemMutation = useMutation({
+    mutationFn: async ({
+      itemId,
+      contactId,
+    }: {
+      itemId: string;
+      contactId: string;
+    }) => {
+      const updatedItems = items.map((i) =>
+        i.id === itemId ? { ...i, status: 'given' as const } : i
+      );
+      const newGive: Give = {
+        id: `g_${Date.now()}`,
+        itemId,
+        contactId,
+        givenAt: new Date().toISOString(),
+      };
+      const updatedGives = [...gives, newGive];
+      await persistItems(updatedItems);
+      await persistGives(updatedGives);
+      return { updatedItems, updatedGives };
+    },
+    onSuccess: ({ updatedItems, updatedGives }) => {
+      setItems(updatedItems);
+      setGives(updatedGives);
+      queryClient.setQueryData(['items'], updatedItems);
+      queryClient.setQueryData(['gives'], updatedGives);
+    },
+  });
+
   const contacts: Contact[] = mockContacts;
 
   const getContactById = useCallback(
@@ -176,29 +231,33 @@ export function LendleeProvider({ children }: { children: React.ReactNode }) {
     total: items.length,
     available: items.filter((i) => i.status === 'available').length,
     lent: items.filter((i) => i.status === 'lent').length,
+    given: items.filter((i) => i.status === 'given').length,
     activeLoans: loans.filter((l) => l.status === 'active').length,
   }), [items, loans]);
 
   const value = useMemo(() => ({
     items,
     loans,
+    gives,
     contacts,
     stats,
-    isLoading: itemsQuery.isLoading || loansQuery.isLoading,
+    isLoading: itemsQuery.isLoading || loansQuery.isLoading || givesQuery.isLoading,
     addItem: addItemMutation.mutateAsync,
     lendItem: lendItemMutation.mutateAsync,
+    giveItem: giveItemMutation.mutateAsync,
     markReturned: markReturnedMutation.mutateAsync,
     getContactById,
     getItemById,
     getActiveLoanForItem,
     isAddingItem: addItemMutation.isPending,
     isLending: lendItemMutation.isPending,
+    isGiving: giveItemMutation.isPending,
   }), [
-    items, loans, contacts, stats,
-    itemsQuery.isLoading, loansQuery.isLoading,
-    addItemMutation.mutateAsync, lendItemMutation.mutateAsync, markReturnedMutation.mutateAsync,
+    items, loans, gives, contacts, stats,
+    itemsQuery.isLoading, loansQuery.isLoading, givesQuery.isLoading,
+    addItemMutation.mutateAsync, lendItemMutation.mutateAsync, giveItemMutation.mutateAsync, markReturnedMutation.mutateAsync,
     getContactById, getItemById, getActiveLoanForItem,
-    addItemMutation.isPending, lendItemMutation.isPending,
+    addItemMutation.isPending, lendItemMutation.isPending, giveItemMutation.isPending,
   ]);
 
   return (

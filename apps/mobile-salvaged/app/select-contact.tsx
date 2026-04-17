@@ -16,10 +16,12 @@ import { Contact } from '@/types';
 import { getInitials } from '@/utils/categories';
 
 export default function SelectContactScreen() {
-  const { itemId } = useLocalSearchParams<{ itemId: string }>();
+  const { itemId, mode } = useLocalSearchParams<{ itemId: string; mode: 'lend' | 'give' }>();
   const [search, setSearch] = useState<string>('');
-  const { contacts } = useLendlee();
+  const { contacts, lendItem, giveItem } = useLendlee();
   const router = useRouter();
+
+  const isGiveMode = mode === 'give';
 
   const filteredContacts = useMemo(() => {
     if (!search.trim()) return contacts;
@@ -27,12 +29,23 @@ export default function SelectContactScreen() {
     return contacts.filter((c) => c.name.toLowerCase().includes(q));
   }, [contacts, search]);
 
-  const handleSelect = useCallback((contact: Contact) => {
-    router.push({
-      pathname: '/set-reminder',
-      params: { itemId, contactId: contact.id },
-    });
-  }, [router, itemId]);
+  const handleSelect = useCallback(async (contact: Contact) => {
+    if (isGiveMode) {
+      // Give mode - no reminder needed, immediate give
+      try {
+        await giveItem({ itemId, contactId: contact.id });
+        router.dismissAll();
+      } catch (err) {
+        console.log('Failed to give item:', err);
+      }
+    } else {
+      // Lend mode - go to reminder screen
+      router.push({
+        pathname: '/set-reminder',
+        params: { itemId, contactId: contact.id },
+      });
+    }
+  }, [router, itemId, isGiveMode, giveItem]);
 
   const renderItem = useCallback(({ item }: { item: Contact }) => (
     <TouchableOpacity
@@ -58,12 +71,21 @@ export default function SelectContactScreen() {
     <View style={styles.container}>
       <Stack.Screen
         options={{
-          title: 'Who are you lending to?',
+          title: isGiveMode ? 'Who are you giving to?' : 'Who are you lending to?',
           headerStyle: { backgroundColor: Colors.cream },
           headerTintColor: Colors.earth,
           headerShadowVisible: false,
         }}
       />
+
+      {isGiveMode && (
+        <View style={styles.giveBanner}>
+          <Text style={styles.giveBannerText}>🎁 Give Mode</Text>
+          <Text style={styles.giveBannerSubtext}>
+            This item will be marked as permanently given away
+          </Text>
+        </View>
+      )}
 
       <View style={styles.searchContainer}>
         <Search size={18} color={Colors.mutedForeground} />
@@ -97,6 +119,27 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Colors.cream,
+  },
+  giveBanner: {
+    backgroundColor: Colors.accentLight + '30',
+    padding: 16,
+    marginHorizontal: 20,
+    marginTop: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: Colors.accentLight,
+    alignItems: 'center',
+  },
+  giveBannerText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: Colors.accent,
+    marginBottom: 4,
+  },
+  giveBannerSubtext: {
+    fontSize: 13,
+    color: Colors.mutedForeground,
+    textAlign: 'center',
   },
   searchContainer: {
     flexDirection: 'row',
