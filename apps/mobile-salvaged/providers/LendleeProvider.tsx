@@ -1,7 +1,6 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import createContextHook from '@nkzw/create-context-hook';
 import { Item, Loan, Contact } from '@/types';
 import { mockItems, mockLoans } from '@/mocks/items';
 import { mockContacts } from '@/mocks/contacts';
@@ -9,7 +8,33 @@ import { mockContacts } from '@/mocks/contacts';
 const ITEMS_KEY = 'lendlee_items';
 const LOANS_KEY = 'lendlee_loans';
 
-export const [LendleeProvider, useLendlee] = createContextHook(() => {
+// Define the context type
+interface LendleeContextType {
+  items: Item[];
+  loans: Loan[];
+  contacts: Contact[];
+  stats: {
+    total: number;
+    available: number;
+    lent: number;
+    activeLoans: number;
+  };
+  isLoading: boolean;
+  addItem: (item: Omit<Item, 'id' | 'createdAt' | 'ownerId' | 'status'>) => Promise<void>;
+  lendItem: (params: { itemId: string; contactId: string; returnBy?: string }) => Promise<void>;
+  markReturned: (loanId: string) => Promise<void>;
+  getContactById: (id: string) => Contact | undefined;
+  getItemById: (id: string) => Item | undefined;
+  getActiveLoanForItem: (itemId: string) => Loan | undefined;
+  isAddingItem: boolean;
+  isLending: boolean;
+}
+
+// Create the context
+const LendleeContext = createContext<LendleeContextType | null>(null);
+
+// Provider component
+export function LendleeProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<Item[]>([]);
   const [loans, setLoans] = useState<Loan[]>([]);
   const queryClient = useQueryClient();
@@ -154,7 +179,7 @@ export const [LendleeProvider, useLendlee] = createContextHook(() => {
     activeLoans: loans.filter((l) => l.status === 'active').length,
   }), [items, loans]);
 
-  return useMemo(() => ({
+  const value = useMemo(() => ({
     items,
     loans,
     contacts,
@@ -175,8 +200,24 @@ export const [LendleeProvider, useLendlee] = createContextHook(() => {
     getContactById, getItemById, getActiveLoanForItem,
     addItemMutation.isPending, lendItemMutation.isPending,
   ]);
-});
 
+  return (
+    <LendleeContext.Provider value={value}>
+      {children}
+    </LendleeContext.Provider>
+  );
+}
+
+// Custom hook to use the context
+export function useLendlee() {
+  const context = useContext(LendleeContext);
+  if (!context) {
+    throw new Error('useLendlee must be used within a LendleeProvider');
+  }
+  return context;
+}
+
+// Hook for filtered loans
 export function useFilteredLoans(filter: 'all' | 'active' | 'returned') {
   const { loans } = useLendlee();
   return useMemo(() => {

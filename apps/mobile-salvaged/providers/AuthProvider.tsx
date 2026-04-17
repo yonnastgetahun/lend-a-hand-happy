@@ -1,12 +1,25 @@
-import { useEffect, useState, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import createContextHook from '@nkzw/create-context-hook';
 import { User } from '@/types';
 
 const AUTH_KEY = 'lendlee_auth';
 
-export const [AuthProvider, useAuth] = createContextHook(() => {
+// Define the context type
+interface AuthContextType {
+  user: User | null;
+  isReady: boolean;
+  isLoggedIn: boolean;
+  login: ({ email, name }: { email: string; name: string }) => void;
+  logout: () => void;
+  isLoggingIn: boolean;
+}
+
+// Create the context
+const AuthContext = createContext<AuthContextType | null>(null);
+
+// Provider component
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isReady, setIsReady] = useState<boolean>(false);
   const queryClient = useQueryClient();
@@ -52,7 +65,7 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     },
   });
 
-  return useMemo(() => ({
+  const value = useMemo(() => ({
     user,
     isReady,
     isLoggedIn: !!user,
@@ -60,4 +73,19 @@ export const [AuthProvider, useAuth] = createContextHook(() => {
     logout: logoutMutation.mutate,
     isLoggingIn: loginMutation.isPending,
   }), [user, isReady, loginMutation.mutate, logoutMutation.mutate, loginMutation.isPending]);
-});
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+// Custom hook to use the context
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
