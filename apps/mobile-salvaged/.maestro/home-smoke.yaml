@@ -1,0 +1,29 @@
+appId: ${APP_ID}
+---
+# Home Screen Smoke Test — verify login, then tab navigation
+
+- runFlow: "login.yaml"
+
+# Verify home content
+- assertVisible: "My Items"
+
+# Tab bar navigation (env vars handle iOS/Android text differences)
+- tapOn: "${TAB_PROFILE}"
+- extendedWaitUntil:
+    visible: "Settings"
+    timeout: 8000
+
+- tapOn: "${TAB_LEND}"
+
+# Dismiss contacts permission if prompted
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+
+- extendedWaitUntil:
+    visible: "Who are you lending to?"
+    timeout: 8000
+
+- tapOn: "${TAB_HOME}"

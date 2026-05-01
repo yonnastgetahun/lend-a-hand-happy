@@ -1,20 +1,39 @@
 import { createClient } from '@supabase/supabase-js';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { AppState } from 'react-native';
+import { AppState, Platform } from 'react-native';
+import * as SecureStore from 'expo-secure-store';
 import type { Database } from '@/types/supabase';
 
 // Get environment variables
-const supabaseUrl = process.env.SUPABASE_URL || 'https://divwsajiaxklbuehnzek.supabase.co';
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || '';
+const supabaseUrl = 'https://divwsajiaxklbuehnzek.supabase.co';
+const supabaseAnonKey = 'sb_publishable_umQuch6DLTJm5NaO7LCmyQ_dFeNLaW2';
 
 if (!supabaseAnonKey) {
   console.warn('⚠️ SUPABASE_ANON_KEY not set. Please check your .env file.');
 }
 
-// Create Supabase client with React Native AsyncStorage
+// SecureStore-backed storage adapter so Supabase auth tokens are persisted
+// in the iOS Keychain / Android Keystore (encrypted) rather than plain
+// AsyncStorage. On web we return no-ops so the JS client falls through to
+// its default browser storage handling.
+const ExpoSecureStoreAdapter = {
+  getItem: (key: string): Promise<string | null> => {
+    if (Platform.OS === 'web') return Promise.resolve(null);
+    return SecureStore.getItemAsync(key);
+  },
+  setItem: (key: string, value: string): Promise<void> => {
+    if (Platform.OS === 'web') return Promise.resolve();
+    return SecureStore.setItemAsync(key, value);
+  },
+  removeItem: (key: string): Promise<void> => {
+    if (Platform.OS === 'web') return Promise.resolve();
+    return SecureStore.deleteItemAsync(key);
+  },
+};
+
+// Create Supabase client with SecureStore so sessions persist across app restarts.
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    storage: AsyncStorage,
+    storage: ExpoSecureStoreAdapter,
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,

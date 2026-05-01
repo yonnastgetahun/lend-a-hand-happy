@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { useSession } from '@/lib/auth/session';
 import { User, AuthError } from '@supabase/supabase-js';
 
 // Define the context type
@@ -21,38 +22,50 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 // Provider component
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isReady, setIsReady] = useState<boolean>(false);
+  const { session, loading } = useSession();
+  const user: User | null = session?.user ?? null;
+  const isReady = !loading;
   const [isLoggingIn, setIsLoggingIn] = useState<boolean>(false);
   const [isSigningUp, setIsSigningUp] = useState<boolean>(false);
   const [authError, setAuthError] = useState<string | null>(null);
 
-  // Check for existing session on mount
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        setUser(session?.user ?? null);
-      } catch (error) {
-        console.error('Error checking session:', error);
-      } finally {
-        setIsReady(true);
+  // Helper to ensure profile exists
+  const ensureProfile = async (userId: string, name: string, email: string) => {
+    try {
+      // Check if profile exists
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', userId)
+        .single();
+      
+      if (!existingProfile) {
+        // Create profile if it doesn't exist
+        console.log('Creating profile for user:', userId);
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            name: name || email.split('@')[0],
+            email: email,
+          });
+        
+        if (insertError) {
+          console.error('Error creating profile:', insertError);
+          // Try upsert as fallback
+          await supabase
+            .from('profiles')
+            .upsert({
+              id: userId,
+              name: name || email.split('@')[0],
+              email: email,
+            });
+        }
       }
-    };
-
-    checkSession();
-
-    // Subscribe to auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null);
-      }
-    );
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
+    } catch (err) {
+      console.error('Profile check error:', err);
+    }
+  };
 
   // Login with email/password
   const login = async (email: string, password: string) => {
@@ -60,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAuthError(null);
     
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -68,6 +81,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         setAuthError(error.message);
         return { error };
+      }
+      
+      // Ensure profile exists after login
+      if (data.user) {
+        await ensureProfile(
+          data.user.id,
+          data.user.user_metadata?.name || email.split('@')[0],
+          data.user.email || email
+        );
       }
       
       return { error: null };
@@ -100,18 +122,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { error };
       }
 
-      // Create profile record
+      // Ensure profile is created after sign up
       if (data.user) {
-        const { error: profileError } = await supabase
+        // Wait a moment for any trigger to run
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Try to create/update profile directly
+        const { error: upsertError } = await supabase
           .from('profiles')
-          .insert({
+          .upsert({
             id: data.user.id,
-            name,
-            email,
+            name: name,
+            email: email,
+            updated_at: new Date().toISOString(),
+          }, {
+            onConflict: 'id',
           });
         
-        if (profileError) {
-          console.error('Error creating profile:', profileError);
+        if (upsertError) {
+          console.log('Profile upsert note:', upsertError.message);
+          // Don't fail sign-up if profile creation has issues
         }
       }
       

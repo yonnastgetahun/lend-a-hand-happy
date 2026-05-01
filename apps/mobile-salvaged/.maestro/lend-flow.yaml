@@ -1,0 +1,62 @@
+appId: ${APP_ID}
+---
+# Lend Flow — Login → WHO → WHAT → WHEN → Preview → Send
+
+- runFlow: "login.yaml"
+
+# Navigate to Lend tab (env var handles iOS "Lend, tab, 2 of 4" vs Android "Lend")
+- tapOn: "${TAB_LEND}"
+- extendedWaitUntil:
+    visible: "Who are you lending to?"
+    timeout: 8000
+
+# Dismiss contacts permission if prompted
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+
+# Manual contact entry
+- tapOn:
+    id: "add-new-contact-row"
+- extendedWaitUntil:
+    visible: "First & last name"
+    timeout: 5000
+- tapOn:
+    id: "manual-contact-name-input"
+- inputText: "Test Borrower"
+- tapOn:
+    id: "manual-contact-phone-input"
+- inputText: "5551234567"
+- pressKey: enter
+- scroll
+- tapOn: "Use this contact"
+
+# Item entry
+- extendedWaitUntil:
+    visible: "What?"
+    timeout: 8000
+- tapOn:
+    id: "item-input-title"
+- inputText: "Drill"
+
+# Timeframe
+- tapOn:
+    id: "timeframe-chip-2weeks"
+
+# Preview
+- tapOn:
+    id: "lend-preview-button"
+- extendedWaitUntil:
+    visible: "Preview message"
+    timeout: 5000
+
+# Send
+- tapOn:
+    id: "sms-preview-send"
+
+# Verify modal dismissed
+- extendedWaitUntil:
+    notVisible: "Preview message"
+    timeout: 10000

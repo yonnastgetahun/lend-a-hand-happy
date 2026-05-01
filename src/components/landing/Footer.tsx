@@ -1,4 +1,5 @@
 import { Heart } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   return (
@@ -17,20 +18,20 @@ const Footer = () => {
 
             {/* Links */}
             <div className="flex flex-wrap justify-center gap-6 text-sm">
-              <a
-                href="#"
-                className="text-earth-light hover:text-primary transition-colors"
-              >
-                About
-              </a>
-              <a
-                href="#"
+              <Link
+                to="/privacy"
                 className="text-earth-light hover:text-primary transition-colors"
               >
                 Privacy
-              </a>
+              </Link>
+              <Link
+                to="/terms"
+                className="text-earth-light hover:text-primary transition-colors"
+              >
+                Terms
+              </Link>
               <a
-                href="#"
+                href="mailto:hello@lendlee.app"
                 className="text-earth-light hover:text-primary transition-colors"
               >
                 Contact

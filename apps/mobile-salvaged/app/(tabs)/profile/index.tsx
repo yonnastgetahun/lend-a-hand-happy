@@ -39,10 +39,10 @@ export default function ProfileScreen() {
       <View style={styles.profileCard}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
-            {user ? getInitials(user.name) : '?'}
+            {user ? getInitials(user.user_metadata?.name || user.email?.split('@')[0] || 'User') : '?'}
           </Text>
         </View>
-        <Text style={styles.name}>{user?.name ?? 'Guest'}</Text>
+        <Text style={styles.name}>{user?.user_metadata?.name || user?.email?.split('@')[0] || 'Guest'}</Text>
         <Text style={styles.email}>{user?.email ?? ''}</Text>
 
         <View style={styles.profileStats}>

@@ -1,8 +1,37 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import {
+  LayoutAnimation,
+  Platform,
+  UIManager,
+} from 'react-native';
 import { supabase, getCurrentUser, Tables, InsertTables, UpdateTables } from '@/lib/supabase';
 import { useAuth } from './AuthProvider';
 import { Item, Loan, Contact, Give } from '@/types';
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js';
+
+// Enable LayoutAnimation on Android.
+if (
+  Platform.OS === 'android' &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
+
+// Map a Supabase loans row (snake_case) to the app Loan type (camelCase).
+function mapLoanRow(row: any): Loan {
+  return {
+    id: row.id,
+    itemId: row.item_id,
+    contactId: row.contact_id,
+    lentAt: row.lent_at,
+    returnBy: row.return_by ?? undefined,
+    returnedAt: row.returned_at ?? undefined,
+    status: row.status,
+    reminderSent: row.reminder_sent ?? undefined,
+    reminderSentAt: row.reminder_sent_at ?? undefined,
+    notes: row.notes ?? undefined,
+  };
+}
 
 // Define the context type
 interface LendleeContextType {
@@ -143,14 +172,31 @@ export function LendleeProvider({ children }: { children: React.ReactNode }) {
       )
       .subscribe();
     
-    // Subscribe to loans changes
+    // Subscribe to loans changes.
+    // Handle events directly so we can animate removals smoothly and avoid
+    // a full refetch. LoanCard resolves items/contacts via getItemById /
+    // getContactById, so we don't need the joined rows in state.
     const loansSubscription = supabase
       .channel('loans_changes')
-      .on('postgres_changes', 
+      .on('postgres_changes',
         { event: '*', schema: 'public', table: 'loans' },
-        () => {
-          // Refresh loans data to get full relations
-          fetchData();
+        (payload: RealtimePostgresChangesPayload<any>) => {
+          if (payload.eventType === 'INSERT') {
+            const newLoan = mapLoanRow(payload.new);
+            setLoans(prev => [newLoan, ...prev.filter(l => l.id !== newLoan.id)]);
+          } else if (payload.eventType === 'UPDATE') {
+            const updated = mapLoanRow(payload.new);
+            // Animate the status transition so the card either re-flows (in
+            // "All"/"Returned" filters) or disappears (in "Active" filter)
+            // smoothly.
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+            setLoans(prev =>
+              prev.map(l => (l.id === updated.id ? updated : l))
+            );
+          } else if (payload.eventType === 'DELETE') {
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+            setLoans(prev => prev.filter(l => l.id !== (payload.old as any).id));
+          }
         }
       )
       .subscribe();

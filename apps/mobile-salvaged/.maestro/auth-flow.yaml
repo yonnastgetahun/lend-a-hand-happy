@@ -1,0 +1,41 @@
+appId: ${APP_ID}
+---
+# Auth Flow — verify login screen renders and email login works
+# BrowserStack auto-captures video for every session.
+
+# --- Launch the app with clean state ---
+- launchApp:
+    clearState: true
+
+# --- Wait for app to settle ---
+- waitForAnimationToEnd
+
+# --- If on login screen, verify it and log in ---
+- runFlow:
+    when:
+      visible: "Sign In"
+    commands:
+      # Verify social login buttons exist
+      - assertVisible: "Continue with Google"
+      # Sign in with test account
+      - tapOn:
+          text: "you@example.com"
+      - inputText: "qa@lendlee.test"
+      - tapOn:
+          text: "••••••••"
+      - inputText: "Lendlee-QA-2026!"
+      - tapOn:
+          text: "Sign In"
+          index: 0
+
+# --- Dismiss iOS "Save Password?" dialog if it appears ---
+- runFlow:
+    when:
+      visible: "Not Now"
+    commands:
+      - tapOn: "Not Now"
+
+# --- Verify we landed on home (from login or auto-auth) ---
+- extendedWaitUntil:
+    visible: "My Items"
+    timeout: 30000

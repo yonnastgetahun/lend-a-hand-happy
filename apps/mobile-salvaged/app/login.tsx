@@ -13,20 +13,41 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useRouter } from 'expo-router';
 import { Heart, Apple, Chrome } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
-import { supabase } from '@/lib/supabase';
-import * as AppleAuthentication from 'expo-apple-authentication';
+import { signInWithApple } from '@/lib/auth/apple';
+import { signInWithGoogle, configureGoogleSignIn } from '@/lib/auth/google';
+import {
+  signInWithEmail,
+  signUpWithEmail,
+  authErrorMessage,
+  type AuthErrorKind,
+} from '@/lib/auth/email';
+
+const MIN_PASSWORD_LENGTH = 8;
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function LoginScreen() {
+  const router = useRouter();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [isSignUp, setIsSignUp] = useState<boolean>(false);
   const [name, setName] = useState<string>('');
-  
-  const { login, signUp, isLoggingIn, isSigningUp, authError, clearError, isReady } = useAuth();
+  const [isGoogleLoading, setIsGoogleLoading] = useState<boolean>(false);
+  const [isAppleLoading, setIsAppleLoading] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [emailError, setEmailError] = useState<string>('');
+  const [passwordError, setPasswordError] = useState<string>('');
+
+  const { isReady } = useAuth();
   const insets = useSafeAreaInsets();
+
+  // Warm up the native Google Sign-In SDK on mount so the first tap is fast.
+  useEffect(() => {
+    configureGoogleSignIn();
+  }, []);
 
   const fadeAnim = React.useRef(new Animated.Value(0)).current;
   const slideAnim = React.useRef(new Animated.Value(30)).current;
@@ -46,94 +67,141 @@ export default function LoginScreen() {
     ]).start();
   }, [fadeAnim, slideAnim]);
 
-  // Clear errors when switching modes
+  // Clear inline errors when the user toggles between Sign In / Sign Up
+  // so a stale message from the previous mode doesn't linger.
   useEffect(() => {
-    clearError();
-  }, [isSignUp, clearError]);
+    setEmailError('');
+    setPasswordError('');
+  }, [isSignUp]);
+
+  const validate = (): boolean => {
+    let ok = true;
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
+      setEmailError('Enter your email.');
+      ok = false;
+    } else if (!EMAIL_PATTERN.test(trimmedEmail)) {
+      setEmailError('That email doesn’t look right.');
+      ok = false;
+    } else {
+      setEmailError('');
+    }
+
+    if (!password) {
+      setPasswordError('Enter your password.');
+      ok = false;
+    } else if (password.length < MIN_PASSWORD_LENGTH) {
+      setPasswordError(`Password must be at least ${MIN_PASSWORD_LENGTH} characters.`);
+      ok = false;
+    } else {
+      setPasswordError('');
+    }
+
+    return ok;
+  };
+
+  const surfaceError = (kind: AuthErrorKind, message: string) => {
+    if (kind === 'rate_limit') {
+      Alert.alert('Slow down', message);
+      return;
+    }
+    if (kind === 'invalid_credentials' || kind === 'weak_password') {
+      setPasswordError(message);
+      return;
+    }
+    if (kind === 'user_already_exists' || kind === 'email_not_confirmed') {
+      setEmailError(message);
+      return;
+    }
+    if (kind === 'network') {
+      Alert.alert('Connection issue', message);
+      return;
+    }
+    Alert.alert(isSignUp ? 'Sign Up Failed' : 'Sign In Failed', message);
+  };
 
   const handleEmailAuth = async () => {
-    if (!email.trim() || !password.trim()) return;
-    
-    if (isSignUp) {
-      if (!name.trim()) {
-        Alert.alert('Name Required', 'Please enter your name to create an account.');
-        return;
+    if (isSubmitting) return;
+    if (isSignUp && !name.trim()) {
+      Alert.alert('Name Required', 'Please enter your name to create an account.');
+      return;
+    }
+    if (!validate()) return;
+
+    setIsSubmitting(true);
+    try {
+      if (isSignUp) {
+        const result = await signUpWithEmail(email, password);
+        if (result.error) {
+          const mapped = authErrorMessage(result.error);
+          surfaceError(mapped.kind, mapped.message);
+          return;
+        }
+        // Email confirmation flow: Supabase returned a user but no session.
+        // Route the user to a "check your email" screen so they know what
+        // happens next instead of dropping them on a silent login screen.
+        if (result.needsEmailConfirmation || !result.session) {
+          router.replace({
+            pathname: '/check-email',
+            params: { email: email.trim() },
+          });
+          return;
+        }
+        // Session in hand — the AuthProvider's onAuthStateChange will route us.
+      } else {
+        const result = await signInWithEmail(email, password);
+        if (result.error) {
+          const mapped = authErrorMessage(result.error);
+          surfaceError(mapped.kind, mapped.message);
+          return;
+        }
+        // Session in hand — the AuthProvider's onAuthStateChange will route us.
       }
-      await signUp(email.trim(), password.trim(), name.trim());
-    } else {
-      await login(email.trim(), password.trim());
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Something went wrong.';
+      Alert.alert(isSignUp ? 'Sign Up Failed' : 'Sign In Failed', message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // Apple Sign-In (iOS only)
   const handleAppleSignIn = async () => {
+    if (isAppleLoading) return;
+    setIsAppleLoading(true);
     try {
-      const credential = await AppleAuthentication.signInAsync({
-        requestedScopes: [
-          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-          AppleAuthentication.AppleAuthenticationScope.EMAIL,
-        ],
-      });
-
-      if (credential.identityToken) {
-        const { data, error } = await supabase.auth.signInWithIdToken({
-          provider: 'apple',
-          token: credential.identityToken,
-        });
-
-        if (error) throw error;
-        
-        // Create profile for new users
-        if (data.user && credential.fullName) {
-          const fullName = [
-            credential.fullName.givenName,
-            credential.fullName.familyName
-          ].filter(Boolean).join(' ');
-          
-          await supabase.from('profiles').upsert({
-            id: data.user.id,
-            name: fullName || 'Apple User',
-            email: credential.email || data.user.email,
-          });
-        }
-      }
+      await signInWithApple();
     } catch (error: any) {
-      if (error.code === 'ERR_REQUEST_CANCELLED') {
-        // User cancelled - no action needed
-        return;
-      }
       console.error('Apple Sign-In error:', error);
-      Alert.alert('Sign In Error', error.message || 'Failed to sign in with Apple');
+      Alert.alert(
+        'Sign In Error',
+        error?.message || 'Failed to sign in with Apple. Please try again.'
+      );
+    } finally {
+      setIsAppleLoading(false);
     }
   };
 
   // Google Sign-In
   const handleGoogleSignIn = async () => {
+    if (isGoogleLoading) return;
+    setIsGoogleLoading(true);
     try {
-      // @TODO: Implement Google Sign-In
-      // This requires:
-      // 1. Google Cloud Console project
-      // 2. Configure OAuth 2.0 credentials
-      // 3. Add iOS/Android client IDs to Supabase
-      // 4. Use @react-native-google-signin/google-signin
-      
-      Alert.alert(
-        'Google Sign-In',
-        'Google Sign-In requires configuration:\n\n' +
-        '1. Google Cloud Console project\n' +
-        '2. OAuth 2.0 credentials setup\n' +
-        '3. Supabase Dashboard configuration\n\n' +
-        'See SUPABASE_AUTH_SETUP.md for details.'
-      );
-    } catch (error) {
+      await signInWithGoogle();
+    } catch (error: any) {
       console.error('Google Sign-In error:', error);
+      Alert.alert(
+        'Sign In Error',
+        error?.message || 'Failed to sign in with Google. Please try again.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Retry', onPress: () => handleGoogleSignIn() },
+        ]
+      );
+    } finally {
+      setIsGoogleLoading(false);
     }
-  };
-
-  // Demo mode for testing
-  const handleDemoLogin = () => {
-    setEmail('demo@lendlee.app');
-    setPassword('demo123456');
   };
 
   if (!isReady) {
@@ -144,6 +212,12 @@ export default function LoginScreen() {
       </View>
     );
   }
+
+  const submitDisabled =
+    isSubmitting ||
+    !email.trim() ||
+    !password ||
+    (isSignUp && !name.trim());
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
@@ -168,12 +242,6 @@ export default function LoginScreen() {
             </Text>
           </View>
 
-          {authError && (
-            <View style={styles.errorBanner}>
-              <Text style={styles.errorText}>{authError}</Text>
-            </View>
-          )}
-
           <View style={styles.form}>
             {isSignUp && (
               <View style={styles.inputGroup}>
@@ -192,41 +260,54 @@ export default function LoginScreen() {
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Email</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, emailError ? styles.inputError : null]}
                 value={email}
-                onChangeText={setEmail}
+                onChangeText={(value) => {
+                  setEmail(value);
+                  if (emailError) setEmailError('');
+                }}
                 placeholder="you@example.com"
                 placeholderTextColor={Colors.mutedForeground}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                editable={!isSubmitting}
               />
+              {emailError ? (
+                <Text style={styles.fieldError} accessibilityRole="alert">
+                  {emailError}
+                </Text>
+              ) : null}
             </View>
 
             <View style={styles.inputGroup}>
               <Text style={styles.label}>Password</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, passwordError ? styles.inputError : null]}
                 value={password}
-                onChangeText={setPassword}
+                onChangeText={(value) => {
+                  setPassword(value);
+                  if (passwordError) setPasswordError('');
+                }}
                 placeholder="••••••••"
                 placeholderTextColor={Colors.mutedForeground}
                 secureTextEntry
+                editable={!isSubmitting}
               />
+              {passwordError ? (
+                <Text style={styles.fieldError} accessibilityRole="alert">
+                  {passwordError}
+                </Text>
+              ) : null}
             </View>
 
             <TouchableOpacity
-              style={[
-                styles.button,
-                (!email.trim() || !password.trim() || (isSignUp && !name.trim())) && 
-                  styles.buttonDisabled,
-              ]}
+              style={[styles.button, submitDisabled && styles.buttonDisabled]}
               onPress={handleEmailAuth}
-              disabled={!email.trim() || !password.trim() || (isSignUp && !name.trim()) || 
-                isLoggingIn || isSigningUp}
+              disabled={submitDisabled}
               activeOpacity={0.8}
             >
-              {isLoggingIn || isSigningUp ? (
+              {isSubmitting ? (
                 <ActivityIndicator color={Colors.cream} />
               ) : (
                 <Text style={styles.buttonText}>
@@ -244,23 +325,37 @@ export default function LoginScreen() {
             {/* Apple Sign-In Button (iOS only) */}
             {Platform.OS === 'ios' && (
               <TouchableOpacity
-                style={styles.appleButton}
+                style={[styles.appleButton, isAppleLoading && styles.buttonDisabled]}
                 onPress={handleAppleSignIn}
+                disabled={isAppleLoading}
                 activeOpacity={0.8}
               >
-                <Apple size={20} color={Colors.white} />
-                <Text style={styles.appleButtonText}>Continue with Apple</Text>
+                {isAppleLoading ? (
+                  <ActivityIndicator size="small" color={Colors.white} />
+                ) : (
+                  <>
+                    <Apple size={20} color={Colors.white} />
+                    <Text style={styles.appleButtonText}>Continue with Apple</Text>
+                  </>
+                )}
               </TouchableOpacity>
             )}
 
             {/* Google Sign-In Button */}
             <TouchableOpacity
-              style={styles.googleButton}
+              style={[styles.googleButton, isGoogleLoading && styles.buttonDisabled]}
               onPress={handleGoogleSignIn}
+              disabled={isGoogleLoading}
               activeOpacity={0.8}
             >
-              <Chrome size={20} color={Colors.earth} />
-              <Text style={styles.googleButtonText}>Continue with Google</Text>
+              {isGoogleLoading ? (
+                <ActivityIndicator size="small" color={Colors.earth} />
+              ) : (
+                <>
+                  <Chrome size={20} color={Colors.earth} />
+                  <Text style={styles.googleButtonText}>Continue with Google</Text>
+                </>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -268,17 +363,11 @@ export default function LoginScreen() {
               onPress={() => setIsSignUp(!isSignUp)}
             >
               <Text style={styles.toggleText}>
-                {isSignUp 
-                  ? 'Already have an account? Sign In' 
+                {isSignUp
+                  ? 'Already have an account? Sign In'
                   : "Don't have an account? Sign Up"}
               </Text>
             </TouchableOpacity>
-
-            <View style={styles.demoSection}>
-              <TouchableOpacity onPress={handleDemoLogin}>
-                <Text style={styles.demoText}>Use Demo Account</Text>
-              </TouchableOpacity>
-            </View>
           </View>
 
           <Text style={styles.footer}>
@@ -340,19 +429,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     lineHeight: 24,
   },
-  errorBanner: {
-    backgroundColor: '#FEE2E2',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#FECACA',
-  },
-  errorText: {
-    color: '#DC2626',
-    fontSize: 14,
-    textAlign: 'center',
-  },
   form: {
     gap: 12,
   },
@@ -374,6 +450,15 @@ const styles = StyleSheet.create({
     color: Colors.foreground,
     borderWidth: 1,
     borderColor: Colors.border,
+  },
+  inputError: {
+    borderColor: Colors.destructive,
+  },
+  fieldError: {
+    color: Colors.destructive,
+    fontSize: 13,
+    paddingLeft: 4,
+    marginTop: 2,
   },
   button: {
     backgroundColor: Colors.primary,
@@ -443,15 +528,6 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontSize: 15,
     fontWeight: '500' as const,
-  },
-  demoSection: {
-    alignItems: 'center',
-    paddingTop: 8,
-  },
-  demoText: {
-    color: Colors.mutedForeground,
-    fontSize: 14,
-    textDecorationLine: 'underline',
   },
   footer: {
     textAlign: 'center',

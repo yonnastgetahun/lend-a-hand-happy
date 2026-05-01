@@ -1,0 +1,30 @@
+appId: ${APP_ID}
+---
+# Auth Timing — Google Sign-In method
+# NOTE: Google Sign-In triggers a native account picker that Maestro cannot
+# automate reliably. This flow is for MANUAL observation only — run it,
+# tap through the Google picker yourself, and note the timestamp delta
+# from Maestro's step log.
+#
+# Run: maestro test .maestro/auth-timing-google.yaml
+
+# Launch clean
+- launchApp:
+    clearState: true
+
+- waitForAnimationToEnd
+- assertVisible: "Sign In"
+
+# --- TIMING STARTS HERE ---
+- tapOn:
+    text: "Continue with Google"
+    label: "AUTH_TIMING_START_GOOGLE"
+
+# Maestro will pause here while the native Google picker is shown.
+# The user must manually select their account.
+
+# --- TIMING ENDS HERE ---
+- extendedWaitUntil:
+    visible: "My Items"
+    timeout: 10000
+    label: "AUTH_TIMING_END_GOOGLE"

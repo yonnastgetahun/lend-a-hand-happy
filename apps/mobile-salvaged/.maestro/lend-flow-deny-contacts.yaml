@@ -1,0 +1,88 @@
+appId: ${APP_ID}
+---
+# Lend Flow — Contacts Permission DENY Path
+# Verifies the app gracefully handles denied contacts permission.
+
+- runFlow: "login.yaml"
+
+# Navigate to Lend tab
+- tapOn: "${TAB_LEND}"
+- extendedWaitUntil:
+    visible: "Who are you lending to?"
+    timeout: 8000
+
+# Deny contacts permission (iOS: "Don't Allow", Android: "Deny" / "Don't allow")
+- runFlow:
+    when:
+      visible: "Don\u2019t Allow"
+    commands:
+      - tapOn: "Don\u2019t Allow"
+
+- runFlow:
+    when:
+      visible: "Deny"
+    commands:
+      - tapOn: "Deny"
+
+# Wait for screen to settle
+- waitForAnimationToEnd
+
+# Verify fallback UI — "Add new contact" row available
+- assertVisible:
+    id: "add-new-contact-row"
+
+# Navigate away and back to confirm no re-prompt
+- tapOn: "${TAB_PROFILE}"
+- extendedWaitUntil:
+    visible: "Settings"
+    timeout: 8000
+- tapOn: "${TAB_LEND}"
+- extendedWaitUntil:
+    visible: "Who are you lending to?"
+    timeout: 8000
+- assertVisible:
+    id: "add-new-contact-row"
+
+# Complete full lend via manual contact entry
+- tapOn:
+    id: "add-new-contact-row"
+- extendedWaitUntil:
+    visible: "First & last name"
+    timeout: 5000
+- tapOn:
+    id: "manual-contact-name-input"
+- inputText: "Test Borrower"
+- tapOn:
+    id: "manual-contact-phone-input"
+- inputText: "5551234567"
+- pressKey: enter
+- scroll
+- tapOn: "Use this contact"
+
+# Item entry
+- extendedWaitUntil:
+    visible: "What?"
+    timeout: 8000
+- tapOn:
+    id: "item-input-title"
+- inputText: "Hammer"
+
+# Timeframe
+- tapOn:
+    id: "timeframe-chip-2weeks"
+
+# Preview
+- tapOn:
+    id: "lend-preview-button"
+- extendedWaitUntil:
+    visible: "Preview message"
+    timeout: 5000
+
+# Send
+- tapOn:
+    id: "sms-preview-send"
+
+# Verify
+- extendedWaitUntil:
+    notVisible: "Preview message"
+    timeout: 10000

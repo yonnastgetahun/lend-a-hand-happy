@@ -30,7 +30,7 @@ const HowItWorks = () => {
   ];
 
   return (
-    <section className="py-24 md:py-32 bg-warm-white">
+    <section id="how-it-works" className="py-24 md:py-32 bg-warm-white">
       <div className="container px-6">
         <div className="max-w-4xl mx-auto">
           {/* Header */}

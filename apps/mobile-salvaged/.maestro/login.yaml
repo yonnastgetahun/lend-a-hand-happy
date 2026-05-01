@@ -1,0 +1,42 @@
+appId: ${APP_ID}
+---
+# Shared login flow — signs in with the QA test account
+# Called by other flows via runFlow
+#
+# Handles two states:
+# 1. Fresh launch → login screen visible → enter credentials
+# 2. Keychain session persisted (iOS real devices) → already on home screen → skip login
+
+# Launch the app with clean state
+- launchApp:
+    clearState: true
+
+# Wait for the app to settle after launch
+- waitForAnimationToEnd
+
+# If on login screen, sign in with QA credentials
+- runFlow:
+    when:
+      visible: "Sign In"
+    commands:
+      - tapOn:
+          text: "you@example.com"
+      - inputText: "qa@lendlee.test"
+      - tapOn:
+          text: "••••••••"
+      - inputText: "Lendlee-QA-2026!"
+      - tapOn:
+          text: "Sign In"
+          index: 0
+
+# Dismiss iOS "Save Password?" dialog if it appears
+- runFlow:
+    when:
+      visible: "Not Now"
+    commands:
+      - tapOn: "Not Now"
+
+# Wait for home screen (either from login or from auto-auth via Keychain)
+- extendedWaitUntil:
+    visible: "My Items"
+    timeout: 30000

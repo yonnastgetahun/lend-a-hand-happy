@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
@@ -11,13 +11,41 @@ import { useRouter } from 'expo-router';
 import { Plus, Package } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useLendlee } from '@/providers/LendleeProvider';
+import { useAuth } from '@/providers/AuthProvider';
+import { useLoansRealtime, type LoanWithItem } from '@/lib/db/useLoansRealtime';
 import { ItemCard } from '@/components/ItemCard';
+import LentItemsSection from '@/components/home/LentItemsSection';
+import { SuccessToast } from '@/components/SuccessToast';
 import { Item } from '@/types';
 
 export default function HomeScreen() {
   const { items, stats, isLoading } = useLendlee();
   const { total, available, lent, given } = stats;
   const router = useRouter();
+  const { user } = useAuth();
+
+  const [toast, setToast] = useState<{ visible: boolean; message: string }>({
+    visible: false,
+    message: '',
+  });
+
+  const handleNewLoan = useCallback((loan: LoanWithItem) => {
+    const itemName = loan.items?.title ?? 'Item';
+    const borrower = loan.borrower_name?.trim();
+    const message = borrower
+      ? `Lent "${itemName}" to ${borrower}`
+      : `Lent "${itemName}"`;
+    setToast({ visible: true, message });
+  }, []);
+
+  const hideToast = useCallback(() => {
+    setToast((prev) => ({ ...prev, visible: false }));
+  }, []);
+
+  const { loans: lentLoans, loading: loansLoading } = useLoansRealtime(
+    user?.id,
+    { onInsert: handleNewLoan },
+  );
 
   const handleItemPress = useCallback((item: Item) => {
     router.push({ pathname: '/item-detail', params: { id: item.id } });
@@ -70,12 +98,15 @@ export default function HomeScreen() {
         keyExtractor={keyExtractor}
         contentContainerStyle={styles.list}
         ItemSeparatorComponent={() => <View style={styles.separator} />}
+        ListHeaderComponent={
+          <LentItemsSection loans={lentLoans} loading={loansLoading} />
+        }
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Package size={48} color={Colors.mutedForeground} />
             <Text style={styles.emptyTitle}>No items yet</Text>
             <Text style={styles.emptySubtitle}>
-              Add your first item to start tracking your lends
+              Start lending or giving away
             </Text>
           </View>
         }
@@ -89,6 +120,12 @@ export default function HomeScreen() {
       >
         <Plus size={26} color={Colors.cream} />
       </TouchableOpacity>
+
+      <SuccessToast
+        visible={toast.visible}
+        message={toast.message}
+        onHide={hideToast}
+      />
     </View>
   );
 }

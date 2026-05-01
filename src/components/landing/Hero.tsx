@@ -66,11 +66,11 @@ const Hero = () => {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="flex flex-col sm:flex-row gap-4 justify-center items-center"
           >
-            <Button size="xl" variant="default">
-              Join the Waitlist
+            <Button size="xl" variant="default" asChild>
+              <a href="#download">Download the App</a>
             </Button>
-            <Button size="lg" variant="gentle">
-              Learn How It Works
+            <Button size="lg" variant="gentle" asChild>
+              <a href="#how-it-works">Learn How It Works</a>
             </Button>
           </motion.div>
 

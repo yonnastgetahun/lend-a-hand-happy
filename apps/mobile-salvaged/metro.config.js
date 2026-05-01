@@ -1,6 +1,14 @@
 const { getDefaultConfig } = require("expo/metro-config");
-const { withRorkMetro } = require("@rork-ai/toolkit-sdk/metro");
 
 const config = getDefaultConfig(__dirname);
 
-module.exports = withRorkMetro(config);
+// Exclude test files from the bundle — Metro tries to resolve bun:test
+// imports when test files live inside app/ (Expo Router route directory).
+config.resolver.blockList = [
+  /\.test\.[jt]sx?$/,
+  /\.spec\.[jt]sx?$/,
+  /e2e\//,
+  /test-support\//,
+];
+
+module.exports = config;

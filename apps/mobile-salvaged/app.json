@@ -7,7 +7,7 @@
     "icon": "./assets/images/icon.png",
     "scheme": "lendlee",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
@@ -16,14 +16,22 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "me.lendlee.ios",
-      "buildNumber": "1.0.0"
+      "buildNumber": "1.0.0",
+      "usesAppleSignIn": true,
+      "infoPlist": {
+        "NSContactsUsageDescription": "Lendlee uses your contacts only when you're picking someone to lend to. We never upload your contact list.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#FAF8F5"
       },
-      "package": "me.lendlee.app"
+      "package": "me.lendlee.app",
+      "permissions": [
+        "READ_CONTACTS"
+      ]
     },
     "web": {
       "favicon": "./assets/images/favicon.png",
@@ -33,17 +41,34 @@
       [
         "expo-router",
         {
-          "origin": "https://lendlee.com"
+          "origin": "https://lendlee.app"
         }
       ],
       "expo-font",
-      "expo-web-browser"
+      "expo-apple-authentication",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 35,
+            "targetSdkVersion": 35,
+            "kotlinVersion": "2.0.21"
+          }
+        }
+      ],
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
-      "supabaseUrl": "https://divwsajiaxklbuehnzek.supabase.co"
+      "supabaseUrl": "https://divwsajiaxklbuehnzek.supabase.co",
+      "router": {
+        "origin": "https://lendlee.app"
+      },
+      "eas": {
+        "projectId": "e68aae73-1c8e-4a4b-8630-393f789bffb4"
+      }
     }
   }
 }

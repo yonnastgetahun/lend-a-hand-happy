@@ -85,6 +85,32 @@ export default function AddItemScreen() {
         }}
       />
 
+      <Text style={styles.sectionLabel}>Category</Text>
+      <View style={styles.categoryGrid}>
+        {categoryList.map((cat) => {
+          const config = categoryConfig[cat];
+          const isSelected = category === cat;
+          return (
+            <TouchableOpacity
+              key={cat}
+              style={[styles.categoryChip, isSelected && styles.categoryChipSelected]}
+              onPress={() => setCategory(cat)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.categoryEmoji}>{config.emoji}</Text>
+              <Text
+                style={[
+                  styles.categoryLabel,
+                  isSelected && styles.categoryLabelSelected,
+                ]}
+              >
+                {config.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
       <Text style={styles.sectionLabel}>Photo</Text>
       <View style={styles.photoSection}>
         {photo ? (
@@ -122,41 +148,15 @@ export default function AddItemScreen() {
         )}
       </View>
 
-      <Text style={styles.sectionLabel}>Title</Text>
+      <Text style={styles.sectionLabel}>Name it</Text>
       <TextInput
         style={styles.input}
         value={title}
         onChangeText={setTitle}
-        placeholder="What are you adding?"
+        placeholder="Name of item"
         placeholderTextColor={Colors.mutedForeground}
         testID="item-title-input"
       />
-
-      <Text style={styles.sectionLabel}>Category</Text>
-      <View style={styles.categoryGrid}>
-        {categoryList.map((cat) => {
-          const config = categoryConfig[cat];
-          const isSelected = category === cat;
-          return (
-            <TouchableOpacity
-              key={cat}
-              style={[styles.categoryChip, isSelected && styles.categoryChipSelected]}
-              onPress={() => setCategory(cat)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.categoryEmoji}>{config.emoji}</Text>
-              <Text
-                style={[
-                  styles.categoryLabel,
-                  isSelected && styles.categoryLabelSelected,
-                ]}
-              >
-                {config.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
 
       <TouchableOpacity
         style={[styles.saveButton, !title.trim() && styles.saveButtonDisabled]}

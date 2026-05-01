@@ -1,5 +1,14 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import React, { useCallback } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ActionSheetIOS,
+  Platform,
+} from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { RotateCcw, Clock, CheckCircle } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { Loan } from '@/types';
@@ -16,31 +25,69 @@ function LoanCardComponent({ loan }: LoanCardProps) {
   const item = getItemById(loan.itemId);
   const contact = getContactById(loan.contactId);
 
-  if (!item || !contact) return null;
-
-  const category = categoryConfig[item.category];
   const isActive = loan.status === 'active';
 
-  const handleMarkReturned = () => {
+  const confirmMarkReturned = useCallback(() => {
+    if (!item || !contact) return;
+    markReturned(loan.id).catch((err) => {
+      console.log('Failed to mark as returned:', err);
+      Alert.alert(
+        'Could not mark as returned',
+        'Please check your connection and try again.'
+      );
+    });
+  }, [item, contact, loan.id, markReturned]);
+
+  const handleMarkReturned = useCallback(() => {
+    if (!item || !contact) return;
     Alert.alert(
       'Mark as Returned',
       `Has ${contact.name} returned "${item.title}"?`,
       [
         { text: 'Not yet', style: 'cancel' },
-        {
-          text: 'Yes, returned!',
-          onPress: () => {
-            markReturned(loan.id).catch((err) => {
-              console.log('Failed to mark as returned:', err);
-            });
-          },
-        },
+        { text: 'Yes, returned!', onPress: confirmMarkReturned },
       ]
     );
-  };
+  }, [item, contact, confirmMarkReturned]);
+
+  const handleLongPress = useCallback(() => {
+    if (!isActive || !item || !contact) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+
+    if (Platform.OS === 'ios') {
+      ActionSheetIOS.showActionSheetWithOptions(
+        {
+          title: item.title,
+          message: `With ${contact.name}`,
+          options: ['Mark as returned', 'Cancel'],
+          destructiveButtonIndex: -1,
+          cancelButtonIndex: 1,
+        },
+        (buttonIndex) => {
+          if (buttonIndex === 0) confirmMarkReturned();
+        }
+      );
+    } else {
+      Alert.alert(item.title, `With ${contact.name}`, [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Mark as returned', onPress: confirmMarkReturned },
+      ]);
+    }
+  }, [isActive, item, contact, confirmMarkReturned]);
+
+  if (!item || !contact) return null;
+
+  const category = categoryConfig[item.category];
 
   return (
-    <View style={[styles.card, !isActive && styles.cardReturned]} testID={`loan-card-${loan.id}`}>
+    <TouchableOpacity
+      activeOpacity={0.85}
+      onLongPress={handleLongPress}
+      delayLongPress={350}
+      disabled={!isActive}
+      style={[styles.card, !isActive && styles.cardReturned]}
+      testID={`loan-card-${loan.id}`}
+    >
       <View style={styles.top}>
         <View style={styles.avatarContainer}>
           <Text style={styles.avatarText}>{getInitials(contact.name)}</Text>
@@ -87,7 +134,7 @@ function LoanCardComponent({ loan }: LoanCardProps) {
           <Text style={styles.returnButtonText}>Mark as Returned</Text>
         </TouchableOpacity>
       )}
-    </View>
+    </TouchableOpacity>
   );
 }
 

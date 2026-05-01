@@ -1,0 +1,42 @@
+appId: ${APP_ID}
+---
+# Auth Timing — Email/Password method
+# Measures time from Sign In tap to Home screen render.
+# Run: maestro test .maestro/auth-timing-email.yaml
+# Check console output for timing.
+
+# Launch clean
+- launchApp:
+    clearState: true
+
+# Warm the app — wait for login screen to fully settle
+- waitForAnimationToEnd
+- assertVisible: "Sign In"
+
+# Pre-fill credentials (typing time excluded from measurement)
+- tapOn:
+    text: "you@example.com"
+- inputText: "qa@lendlee.test"
+- tapOn:
+    text: "••••••••"
+- inputText: "Lendlee-QA-2026!"
+
+# --- TIMING STARTS HERE ---
+# Maestro logs timestamps per step; diff "Sign In tap" and "My Items visible"
+- tapOn:
+    text: "Sign In"
+    index: 0
+    label: "AUTH_TIMING_START_EMAIL"
+
+# Dismiss iOS "Save Password?" dialog if it appears
+- runFlow:
+    when:
+      visible: "Not Now"
+    commands:
+      - tapOn: "Not Now"
+
+# --- TIMING ENDS HERE ---
+- extendedWaitUntil:
+    visible: "My Items"
+    timeout: 5000
+    label: "AUTH_TIMING_END_EMAIL"

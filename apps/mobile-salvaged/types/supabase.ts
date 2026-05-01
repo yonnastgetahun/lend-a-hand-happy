@@ -130,7 +130,11 @@ export type Database = {
         Row: {
           id: string
           item_id: string
-          contact_id: string
+          contact_id: string | null
+          lender_id: string | null
+          borrower_name: string | null
+          borrower_phone: string | null
+          tone: string | null
           lent_at: string
           return_by: string | null
           returned_at: string | null
@@ -143,7 +147,11 @@ export type Database = {
         Insert: {
           id?: string
           item_id: string
-          contact_id: string
+          contact_id?: string | null
+          lender_id?: string | null
+          borrower_name?: string | null
+          borrower_phone?: string | null
+          tone?: string | null
           lent_at?: string
           return_by?: string | null
           returned_at?: string | null
@@ -156,7 +164,11 @@ export type Database = {
         Update: {
           id?: string
           item_id?: string
-          contact_id?: string
+          contact_id?: string | null
+          lender_id?: string | null
+          borrower_name?: string | null
+          borrower_phone?: string | null
+          tone?: string | null
           lent_at?: string
           return_by?: string | null
           returned_at?: string | null
@@ -210,6 +222,17 @@ export type Database = {
           active_loans: number
           total_contacts: number
         }
+      }
+      lend_item: {
+        Args: {
+          p_title: string
+          p_category: string
+          p_borrower_name: string
+          p_borrower_phone: string
+          p_return_by: string
+          p_tone: string
+        }
+        Returns: Database['public']['Tables']['loans']['Row']
       }
     }
     Enums: {

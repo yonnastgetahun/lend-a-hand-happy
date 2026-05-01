@@ -1,35 +1,9 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Heart, CheckCircle, AlertCircle } from "lucide-react";
-import { z } from "zod";
-
-const emailSchema = z.string().trim().email({ message: "Please enter a valid email address" });
+import { Download } from "lucide-react";
 
 const EarlyAccess = () => {
-  const [email, setEmail] = useState("");
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
-  const [errorMessage, setErrorMessage] = useState("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setErrorMessage("");
-
-    const result = emailSchema.safeParse(email);
-    if (!result.success) {
-      setStatus("error");
-      setErrorMessage(result.error.errors[0].message);
-      return;
-    }
-
-    // Simulate success (placeholder for actual integration)
-    setStatus("success");
-    setEmail("");
-  };
-
   return (
-    <section className="py-24 md:py-32 gradient-sage">
+    <section id="download" className="py-24 md:py-32 gradient-sage">
       <div className="container px-6">
         <div className="max-w-2xl mx-auto">
           <motion.div
@@ -41,72 +15,51 @@ const EarlyAccess = () => {
           >
             {/* Icon */}
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-8">
-              <Heart className="w-8 h-8 text-primary" />
+              <Download className="w-8 h-8 text-primary" />
             </div>
 
             {/* Content */}
             <h2 className="text-3xl md:text-4xl font-serif text-foreground mb-4">
-              Start sharing more freely
+              Get Lendlee
             </h2>
             <p className="text-lg text-earth-light mb-10 max-w-lg mx-auto">
-              We're building Lendlee with care, and we'd love you to be part of it from the start. No spam—just updates when we have something worth sharing.
+              Start lending freely and keeping relationships whole. Available on iOS and Android.
             </p>
 
-            {/* Form */}
+            {/* Store Badges */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: 0.2 }}
-              className="max-w-md mx-auto"
+              className="flex flex-col sm:flex-row gap-4 justify-center items-center"
             >
-              {status === "success" ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="p-6 rounded-2xl bg-warm-white border border-primary/20 text-center"
-                >
-                  <CheckCircle className="w-10 h-10 text-primary mx-auto mb-4" />
-                  <h3 className="font-serif text-xl text-foreground mb-2">Welcome to Lendlee!</h3>
-                  <p className="text-earth-light">
-                    We'll be in touch soon. Thank you for believing in community.
-                  </p>
-                </motion.div>
-              ) : (
-                <form onSubmit={handleSubmit} className="space-y-4">
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Input
-                      type="email"
-                      placeholder="your@email.com"
-                      value={email}
-                      onChange={(e) => {
-                        setEmail(e.target.value);
-                        if (status === "error") setStatus("idle");
-                      }}
-                      className="h-12 rounded-xl bg-warm-white border-border focus:border-primary text-center sm:text-left"
-                      aria-label="Email address"
-                    />
-                    <Button type="submit" size="lg" className="shrink-0">
-                      Get Early Access
-                    </Button>
-                  </div>
+              {/* Apple App Store Badge */}
+              <a href="#" aria-label="Download on the App Store" className="transition-transform hover:scale-105">
+                <svg width="160" height="54" viewBox="0 0 160 54" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="160" height="54" rx="8" fill="#000" />
+                  <text x="80" y="18" textAnchor="middle" fill="#fff" fontSize="9" fontFamily="system-ui, sans-serif">Download on the</text>
+                  <text x="80" y="36" textAnchor="middle" fill="#fff" fontSize="16" fontWeight="600" fontFamily="system-ui, sans-serif">App Store</text>
+                  <g transform="translate(22, 14)" fill="#fff">
+                    <path d="M14.5 24.5c-.8 1.7-1.2 2.5-2.3 4-.1.2-.3.4-.5.6-.7.8-1.7 1.8-2.9 1.8-1.1 0-1.4-.7-2.9-.7s-1.8.7-3 .7c-1.2 0-2.1-.9-2.8-1.7C-2.3 26.5-.5 21.2 1.7 18.6c1-1.2 2.2-2 3.4-2 1.2 0 2 .8 3 .8s1.7-.8 3.1-.8c1.1 0 2.1.6 3 1.5-2.6 1.4-2.2 5.1.3 6.4zM11 14.5c.8-1 1.3-2.4 1.2-3.8-1.2.1-2.6.8-3.4 1.8-.7.9-1.4 2.3-1.1 3.7 1.3 0 2.5-.7 3.3-1.7z" transform="scale(0.55)" />
+                  </g>
+                </svg>
+              </a>
 
-                  {status === "error" && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center justify-center gap-2 text-destructive text-sm"
-                    >
-                      <AlertCircle className="w-4 h-4" />
-                      <span>{errorMessage}</span>
-                    </motion.div>
-                  )}
-
-                  <p className="text-xs text-muted-foreground">
-                    No spam, ever. Unsubscribe anytime. We respect your inbox.
-                  </p>
-                </form>
-              )}
+              {/* Google Play Store Badge */}
+              <a href="#" aria-label="Get it on Google Play" className="transition-transform hover:scale-105">
+                <svg width="160" height="54" viewBox="0 0 160 54" xmlns="http://www.w3.org/2000/svg">
+                  <rect width="160" height="54" rx="8" fill="#000" />
+                  <text x="85" y="18" textAnchor="middle" fill="#fff" fontSize="9" fontFamily="system-ui, sans-serif">GET IT ON</text>
+                  <text x="85" y="36" textAnchor="middle" fill="#fff" fontSize="16" fontWeight="600" fontFamily="system-ui, sans-serif">Google Play</text>
+                  <g transform="translate(18, 14)">
+                    <polygon points="0,0 14,8 14,18 0,26" fill="#4285F4" />
+                    <polygon points="0,0 14,8 7,13" fill="#34A853" />
+                    <polygon points="14,18 14,8 7,13" fill="#FBBC05" />
+                    <polygon points="0,26 14,18 7,13" fill="#EA4335" />
+                  </g>
+                </svg>
+              </a>
             </motion.div>
           </motion.div>
         </div>
