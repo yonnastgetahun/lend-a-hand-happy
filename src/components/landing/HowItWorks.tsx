@@ -13,13 +13,13 @@ const HowItWorks = () => {
       icon: User,
       step: "2",
       title: "Choose a person",
-      description: "Pick who's borrowing. They can join too, or not—it works either way.",
+      description: "Pick who's borrowing from your contacts, or add someone new with a name and number.",
     },
     {
       icon: Clock,
       step: "3",
-      title: "Set a gentle reminder",
-      description: "Choose when you'd like a quiet nudge. A week? A month? Whenever feels right.",
+      title: "Set a return timeframe",
+      description: "Pick when you'd like it back. When the date is near, send a friendly SMS right from the app.",
     },
     {
       icon: CheckCircle,

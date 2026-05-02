@@ -5,23 +5,23 @@ const Solution = () => {
   const features = [
     {
       icon: Bell,
-      title: "Gentle reminders",
-      description: "Quiet nudges at the right time—for you, not them. No awkward automated messages.",
+      title: "SMS reminders",
+      description: "Send a friendly text to your borrower when the return date is near. Casual, not confrontational.",
     },
     {
       icon: RefreshCw,
-      title: "Mutual accountability",
-      description: "Both parties see the same simple truth. No guessing, no assuming.",
+      title: "Track everything",
+      description: "See what's lent out, to whom, and when it's due back. Nothing slips through the cracks.",
     },
     {
       icon: MessageCircle,
       title: "No awkward conversations",
-      description: "The app remembers so you don't have to ask. Just a soft prompt when it's time.",
+      description: "The app remembers so you don't have to bring it up. A quick text does the work for you.",
     },
     {
       icon: Heart,
       title: "Relationship-first design",
-      description: "Built to protect trust, not transactions. Care is always the priority.",
+      description: "Built to protect trust, not transactions. Generosity should strengthen bonds, not strain them.",
     },
   ];
 
@@ -44,7 +44,7 @@ const Solution = () => {
               Remember gently. Return joyfully.
             </h2>
             <p className="text-lg text-earth-light max-w-2xl mx-auto leading-relaxed">
-              Lendlee creates a quiet, shared space for lending. No pressure, no nagging—just clarity and care. You stay connected. Your stuff finds its way home.
+              Lendlee keeps track of what you've lent so you don't have to. When it's time, send a friendly reminder. No pressure, no nagging—just clarity and care.
             </p>
           </motion.div>
 

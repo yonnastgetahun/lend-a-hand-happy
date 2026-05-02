@@ -17,7 +17,7 @@
     --popover-foreground: 25 20% 20%;
 
     /* Soft sage green - trust, growth, community */
-    --primary: 145 25% 42%;
+    --primary: 100 16% 54%;
     --primary-foreground: 40 33% 98%;
 
     /* Warm cream */
@@ -29,7 +29,7 @@
     --muted-foreground: 25 15% 45%;
 
     /* Soft terracotta accent - warmth, humanity */
-    --accent: 18 55% 65%;
+    --accent: 18 45% 56%;
     --accent-foreground: 40 33% 98%;
 
     --destructive: 0 65% 55%;
@@ -37,19 +37,19 @@
 
     --border: 35 25% 88%;
     --input: 35 25% 88%;
-    --ring: 145 25% 42%;
+    --ring: 100 16% 54%;
 
     --radius: 1rem;
 
     /* Custom Lendlee tokens */
     --cream: 40 33% 98%;
     --cream-dark: 38 30% 94%;
-    --sage: 145 25% 42%;
+    --sage: 100 16% 54%;
     --sage-light: 145 20% 92%;
     --sage-muted: 145 15% 75%;
-    --terracotta: 18 55% 65%;
+    --terracotta: 18 45% 56%;
     --terracotta-light: 18 45% 92%;
-    --earth: 25 20% 20%;
+    --earth: 25 22% 29%;
     --earth-light: 25 15% 45%;
     --warm-white: 40 40% 99%;
 

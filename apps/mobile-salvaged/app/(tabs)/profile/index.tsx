@@ -101,7 +101,7 @@ export default function ProfileScreen() {
       <View style={styles.brandSection}>
         <Heart size={18} color={Colors.accentLight} fill={Colors.accentLight} />
         <Text style={styles.brandText}>Lendlee</Text>
-        <Text style={styles.brandTagline}>Lend freely. Care deeply.</Text>
+        <Text style={styles.brandTagline}>Lend freely. Remember kindly.</Text>
       </View>
     </ScrollView>
   );

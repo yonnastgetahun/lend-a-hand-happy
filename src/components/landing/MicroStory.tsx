@@ -23,13 +23,13 @@ const MicroStory = () => {
                 "Sarah lent her favorite cookbook to a neighbor.
               </p>
               <p className="font-serif text-xl md:text-2xl text-foreground leading-relaxed italic">
-                Three months later, Lendlee reminded them both.
+                Three months later, she sent a friendly reminder.
               </p>
               <p className="font-serif text-xl md:text-2xl text-foreground leading-relaxed italic">
                 It came back with a thank-you note inside.
               </p>
               <p className="font-serif text-xl md:text-2xl text-foreground leading-relaxed italic">
-                Somewhere along the way, trust grew stronger."
+                Lending made the heart grow fonder."
               </p>
             </div>
 

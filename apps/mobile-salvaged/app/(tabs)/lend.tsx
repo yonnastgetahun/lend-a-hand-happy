@@ -22,6 +22,7 @@ import {
   ActivityIndicator,
   Platform,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import { Stack } from 'expo-router';
 import * as Contacts from 'expo-contacts';
@@ -290,7 +291,7 @@ export default function LendScreen() {
   const canPreview = Boolean(selectedContact) && itemTitle.trim().length > 0;
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top']}>
       <Stack.Screen
         options={{
           title: 'Lend something',
@@ -373,7 +374,7 @@ export default function LendScreen() {
         isVeteran={lenderExp?.isVeteran ?? false}
         initialSkipPreview={lenderExp?.skipPreview ?? false}
       />
-    </View>
+    </SafeAreaView>
   );
 }
 

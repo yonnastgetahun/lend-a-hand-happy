@@ -238,7 +238,7 @@ export default function LoginScreen() {
             </View>
             <Text style={styles.title}>Lendlee</Text>
             <Text style={styles.tagline}>
-              Lend freely. Care deeply.{'\n'}Stay connected.
+              Lend freely. Remember kindly.{'\n'}Lending makes the heart grow fonder.
             </Text>
           </View>
 

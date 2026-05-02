@@ -44,9 +44,9 @@ const Hero = () => {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-4xl md:text-5xl lg:text-6xl font-serif text-foreground leading-tight mb-6"
           >
-            Lend freely. Care deeply.
+            Lend freely. Remember kindly.
             <br />
-            <span className="text-primary">Stay connected.</span>
+            <span className="text-primary">Lending makes the heart grow fonder.</span>
           </motion.h1>
 
           {/* Subheading */}
@@ -56,7 +56,7 @@ const Hero = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-lg md:text-xl text-earth-light max-w-xl mx-auto mb-10 leading-relaxed"
           >
-            Lendlee helps you gently track books and personal items shared with friends and neighbors—so generosity stays joyful and relationships stay whole.
+            Track books, tools, kitchen gear, and personal items you lend to friends and neighbors. Send friendly SMS reminders when it's time to return. Simple, private, and relationship-first.
           </motion.p>
 
           {/* CTA buttons */}
