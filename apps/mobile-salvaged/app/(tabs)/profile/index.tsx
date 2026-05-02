@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -6,16 +6,55 @@ import {
   StyleSheet,
   ScrollView,
   Alert,
+  Switch,
+  Linking,
 } from 'react-native';
+import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LogOut, Heart, Bell, Shield, HelpCircle, ChevronRight } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
 import { useLendlee } from '@/providers/LendleeProvider';
 import { getInitials } from '@/utils/categories';
 
+const REMINDERS_STORAGE_KEY = 'lendlee.remindersEnabled';
+
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const { stats } = useLendlee();
+  const [remindersEnabled, setRemindersEnabled] = useState(true);
+  const [permissionGranted, setPermissionGranted] = useState(false);
+
+  const checkPermission = useCallback(async () => {
+    const { status } = await Notifications.getPermissionsAsync();
+    setPermissionGranted(status === 'granted');
+  }, []);
+
+  useEffect(() => {
+    // Load saved preference
+    AsyncStorage.getItem(REMINDERS_STORAGE_KEY).then((value) => {
+      if (value !== null) {
+        setRemindersEnabled(value === 'true');
+      }
+    });
+    checkPermission();
+  }, [checkPermission]);
+
+  const handleToggleReminders = async (value: boolean) => {
+    if (!permissionGranted) {
+      Alert.alert(
+        'Notifications Disabled',
+        'Please enable notifications for Lendlee in your device settings.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Open Settings', onPress: () => Linking.openSettings() },
+        ]
+      );
+      return;
+    }
+    setRemindersEnabled(value);
+    await AsyncStorage.setItem(REMINDERS_STORAGE_KEY, String(value));
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -28,8 +67,9 @@ export default function ProfileScreen() {
     );
   };
 
+  const notificationStatus = permissionGranted && remindersEnabled ? 'On' : 'Off';
+
   const settingsItems = [
-    { icon: Bell, label: 'Notifications', subtitle: 'Coming soon' },
     { icon: Shield, label: 'Privacy', subtitle: 'Coming soon' },
     { icon: HelpCircle, label: 'Help & Support', subtitle: 'Coming soon' },
   ];
@@ -66,6 +106,19 @@ export default function ProfileScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Settings</Text>
         <View style={styles.settingsCard}>
+          <View style={[styles.settingsRow, styles.settingsRowBorder]}>
+            <Bell size={20} color={Colors.muted} />
+            <View style={styles.settingsRowContent}>
+              <Text style={styles.settingsLabel}>Notifications</Text>
+              <Text style={styles.settingsSubtitle}>{notificationStatus}</Text>
+            </View>
+            <Switch
+              value={permissionGranted && remindersEnabled}
+              onValueChange={handleToggleReminders}
+              trackColor={{ false: Colors.border, true: Colors.primary }}
+              thumbColor={Colors.white}
+            />
+          </View>
           {settingsItems.map((item, index) => (
             <TouchableOpacity
               key={item.label}

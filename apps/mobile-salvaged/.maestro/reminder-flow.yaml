@@ -1,0 +1,106 @@
+appId: ${APP_ID}
+---
+# Reminder Flow — Login → Lend item → Navigate to loan detail → Send Reminder
+# Tests the full reminder SMS preview with 3 tones (Chill/Friendly/Warm)
+
+# Step 1: Login
+- runFlow: "login.yaml"
+
+# Step 2: Lend an item first (so we have a loan to remind about)
+- tapOn: "${TAB_LEND}"
+- extendedWaitUntil:
+    visible: "Who are you lending to?"
+    timeout: 8000
+
+# Dismiss contacts permission if prompted
+- runFlow:
+    when:
+      visible: "Allow"
+    commands:
+      - tapOn: "Allow"
+
+# Manual contact entry
+- tapOn:
+    id: "add-new-contact-row"
+- extendedWaitUntil:
+    visible: "First & last name"
+    timeout: 5000
+- tapOn:
+    id: "manual-contact-name-input"
+- inputText: "Reminder Test"
+- tapOn:
+    id: "manual-contact-phone-input"
+- inputText: "5559876543"
+- pressKey: enter
+- scroll
+- tapOn: "Use this contact"
+
+# Item entry
+- extendedWaitUntil:
+    visible: "What?"
+    timeout: 8000
+- tapOn:
+    id: "item-input-title"
+- inputText: "Hammer"
+
+# Timeframe — set a return date
+- tapOn:
+    id: "timeframe-chip-2weeks"
+
+# Preview and send the initial lend SMS
+- tapOn:
+    id: "lend-preview-button"
+- extendedWaitUntil:
+    visible: "Preview message"
+    timeout: 5000
+- tapOn:
+    id: "sms-preview-send"
+
+# Wait for lend to complete
+- extendedWaitUntil:
+    notVisible: "Preview message"
+    timeout: 10000
+
+# Step 3: Navigate to Home tab and find the loan
+- tapOn: "${TAB_HOME}"
+- extendedWaitUntil:
+    visible: "My Items"
+    timeout: 8000
+
+# Tap on the loan card we just created (by item name)
+- tapOn: "Hammer"
+- extendedWaitUntil:
+    visible: "Send Reminder"
+    timeout: 8000
+
+# Step 4: Open Reminder Preview Modal
+- tapOn: "Send Reminder"
+- extendedWaitUntil:
+    visible: "Chill"
+    timeout: 5000
+
+# Verify all 3 tones are visible
+- assertVisible: "Chill"
+- assertVisible: "Friendly"
+- assertVisible: "Warm"
+
+# Verify the reminder bubble has content (no empty preview)
+- assertVisible:
+    id: "reminder-preview-bubble"
+
+# Try switching tones
+- tapOn: "Chill"
+- tapOn: "Warm"
+- tapOn: "Friendly"
+
+# Cancel the reminder (don't actually send SMS in test)
+- tapOn:
+    id: "reminder-preview-cancel"
+
+# Verify modal closed
+- extendedWaitUntil:
+    notVisible: "Chill"
+    timeout: 5000
+
+# Verify we're back on loan detail
+- assertVisible: "Send Reminder"

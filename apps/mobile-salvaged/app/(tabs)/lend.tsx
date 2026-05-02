@@ -49,6 +49,10 @@ import {
   setSkipPreviewSetting,
   type LenderExperience,
 } from '@/lib/sms/lenderExperience';
+import {
+  requestNotificationPermission,
+  scheduleReminder,
+} from '@/lib/notifications/scheduleReminder';
 
 // Type alias for the in-app Contact shape consumed by ContactPicker.
 import type { Contact as AppContact } from '@/types';
@@ -214,6 +218,27 @@ export default function LendScreen() {
     // for the next lend's default, so nothing to reset here.
   }, []);
 
+  /**
+   * After a successful lend, schedule a local reminder notification
+   * 1 day before the return date (if one was set). Permission is
+   * requested on the first call; subsequent calls are no-ops if
+   * already granted.
+   */
+  const maybeScheduleReminder = useCallback(
+    async (loan: { id: string; borrower_name?: string | null }) => {
+      if (!returnBy) return;
+      const granted = await requestNotificationPermission();
+      if (!granted) return;
+      await scheduleReminder(
+        loan.id,
+        loan.borrower_name ?? selectedContact?.name ?? 'Someone',
+        itemTitle,
+        returnBy,
+      );
+    },
+    [returnBy, selectedContact, itemTitle],
+  );
+
   const handleResult = useCallback(
     (result: SubmitLendResult) => {
       switch (result.kind) {
@@ -229,12 +254,14 @@ export default function LendScreen() {
           return;
         case 'sms-cancelled':
           // Neutral toast: the loan row exists, we just didn't message.
+          maybeScheduleReminder(result.loan);
           Alert.alert('Saved', 'Saved — SMS not sent.');
           setPreviewOpen(false);
           resetForm();
           router.back();
           return;
         case 'sms-copied':
+          maybeScheduleReminder(result.loan);
           Alert.alert(
             'Message copied',
             'Your Messages app was unavailable, so we copied the text. Paste it into any messaging app to send.',
@@ -244,6 +271,7 @@ export default function LendScreen() {
           router.back();
           return;
         case 'sms-sent':
+          maybeScheduleReminder(result.loan);
           Alert.alert('Sent', `Lent to ${result.loan.borrower_name ?? 'them'}.`);
           setPreviewOpen(false);
           resetForm();
@@ -254,6 +282,7 @@ export default function LendScreen() {
           // Android sometimes can't report the outcome. Treat as
           // best-effort success: row exists, message was handed to the
           // composer, we just don't know if the user hit Send.
+          maybeScheduleReminder(result.loan);
           Alert.alert('Saved', 'Loan saved. Check your Messages app to confirm the text.');
           setPreviewOpen(false);
           resetForm();
@@ -261,7 +290,7 @@ export default function LendScreen() {
           return;
       }
     },
-    [resetForm, router],
+    [resetForm, router, maybeScheduleReminder],
   );
 
   const handleSend = useCallback(
