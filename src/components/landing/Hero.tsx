@@ -216,17 +216,17 @@ const Hero = () => {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#E5ECE0]/90 backdrop-blur-sm text-[#4A5A3B] text-sm font-medium mb-8 shadow-sm border border-[#8B9D77]/20 pointer-events-auto"
         >
           <Star size={14} className="fill-current" />
-          <span>Lend freely. Remember kindly.</span>
+          <span>Welcome to Lendlee</span>
         </motion.div>
 
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 4.4, ease: "easeOut" }}
-          className="text-4xl sm:text-5xl lg:text-7xl font-bold tracking-tight text-[#2A2420] mb-8 leading-[1.1] drop-shadow-sm"
+          className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-[#2A2420] mb-8 leading-[1.1] drop-shadow-sm"
         >
-          Lending makes the <br />
-          <span className="text-[#C17C5F]">heart grow fonder.</span>
+          Sharing makes the <br />
+          <span className="text-[#C17C5F]">heart fonder.</span>
         </motion.h1>
 
         <motion.p
@@ -235,7 +235,7 @@ const Hero = () => {
           transition={{ duration: 0.8, delay: 4.6, ease: "easeOut" }}
           className="text-lg sm:text-xl text-[#4A3C2F] font-medium opacity-90 mb-10 max-w-2xl mx-auto drop-shadow-sm"
         >
-          Track books, tools, kitchen gear, and personal items you lend to friends and neighbors. Send friendly SMS reminders when it's time to return. Simple, private, and relationship-first.
+          Track what you lend, cherish what you share. Lendlee helps you keep a warm, organized connection with friends and family when lending items.
         </motion.p>
 
         <motion.div
@@ -245,7 +245,7 @@ const Hero = () => {
           className="flex flex-col sm:flex-row items-center justify-center gap-4 w-full sm:w-auto pointer-events-auto"
         >
           <a href="#download" className="w-full sm:w-auto px-8 py-4 bg-[#8B9D77] hover:bg-[#7A8A67] text-white rounded-xl font-semibold transition-all shadow-lg shadow-[#8B9D77]/30 flex items-center justify-center gap-2 hover:-translate-y-0.5">
-            Download App
+            Download the App
           </a>
           <a href="#how-it-works" className="w-full sm:w-auto px-8 py-4 bg-[#FFFDF8]/80 backdrop-blur-sm hover:bg-[#F0EBE1] text-[#5C4B3A] border border-[#E8E1D3] rounded-xl font-semibold transition-all flex items-center justify-center gap-2">
             See How It Works <ArrowRight size={18} />
