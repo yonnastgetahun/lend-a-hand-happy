@@ -179,7 +179,7 @@ export function LendleeProvider({ children }: { children: React.ReactNode }) {
     const loansSubscription = supabase
       .channel('loans_changes')
       .on('postgres_changes',
-        { event: '*', schema: 'public', table: 'loans' },
+        { event: '*', schema: 'public', table: 'loans', filter: `lender_id=eq.${user.id}` },
         (payload: RealtimePostgresChangesPayload<any>) => {
           if (payload.eventType === 'INSERT') {
             const newLoan = mapLoanRow(payload.new);

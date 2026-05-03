@@ -12,17 +12,15 @@ export interface GoogleSignInResult {
   session: Session | null;
 }
 
-// Read client IDs from env with hardcoded fallbacks so a misconfigured build
-// still picks up the real value that ships with the repo. Expo only exposes
-// env vars prefixed with EXPO_PUBLIC_ to the JS bundle at runtime.
-const IOS_CLIENT_ID =
-  process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ??
-  '180727363697-jv1f6b84d80f7mtihenh7kq3vv7pu269.apps.googleusercontent.com';
-
+const IOS_CLIENT_ID = process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID;
 const WEB_CLIENT_ID =
-  process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ??
-  process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID ??
-  '180727363697-jv1f6b84d80f7mtihenh7kq3vv7pu269.apps.googleusercontent.com';
+  process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID ?? IOS_CLIENT_ID;
+
+if (!IOS_CLIENT_ID) {
+  throw new Error(
+    'Missing EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID. Set it in your .env file.'
+  );
+}
 
 let configured = false;
 

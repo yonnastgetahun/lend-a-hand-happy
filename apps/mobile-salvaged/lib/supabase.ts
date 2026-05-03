@@ -3,12 +3,13 @@ import { AppState, Platform } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
 import type { Database } from '@/types/supabase';
 
-// Get environment variables
-const supabaseUrl = 'https://divwsajiaxklbuehnzek.supabase.co';
-const supabaseAnonKey = 'sb_publishable_umQuch6DLTJm5NaO7LCmyQ_dFeNLaW2';
+const supabaseUrl = process.env.EXPO_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-if (!supabaseAnonKey) {
-  console.warn('⚠️ SUPABASE_ANON_KEY not set. Please check your .env file.');
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error(
+    'Missing Supabase credentials. Set EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY in your .env file.'
+  );
 }
 
 // SecureStore-backed storage adapter so Supabase auth tokens are persisted

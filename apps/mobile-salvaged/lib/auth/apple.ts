@@ -13,7 +13,7 @@ function generateNonce(): string {
   if (g.crypto?.getRandomValues) {
     g.crypto.getRandomValues(bytes);
   } else {
-    for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+    throw new Error('crypto.getRandomValues is required for secure nonce generation');
   }
   return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 }
