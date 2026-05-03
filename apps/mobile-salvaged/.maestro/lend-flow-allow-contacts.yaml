@@ -4,8 +4,9 @@ appId: ${APP_ID}
 
 - runFlow: "login.yaml"
 
-# Navigate to Lend tab
-- tapOn: "${TAB_LEND}"
+# Navigate to Lend tab (coordinate tap)
+- tapOn:
+    point: "37%,96%"
 - extendedWaitUntil:
     visible: "Who are you lending to?"
     timeout: 8000

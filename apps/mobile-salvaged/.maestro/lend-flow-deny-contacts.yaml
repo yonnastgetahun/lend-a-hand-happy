@@ -5,8 +5,9 @@ appId: ${APP_ID}
 
 - runFlow: "login.yaml"
 
-# Navigate to Lend tab
-- tapOn: "${TAB_LEND}"
+# Navigate to Lend tab (coordinate tap)
+- tapOn:
+    point: "37%,96%"
 - extendedWaitUntil:
     visible: "Who are you lending to?"
     timeout: 8000
@@ -32,11 +33,15 @@ appId: ${APP_ID}
     id: "add-new-contact-row"
 
 # Navigate away and back to confirm no re-prompt
-- tapOn: "${TAB_PROFILE}"
+# Profile tab (4th tab)
+- tapOn:
+    point: "87%,96%"
 - extendedWaitUntil:
     visible: "Settings"
     timeout: 8000
-- tapOn: "${TAB_LEND}"
+# Lend tab (2nd tab)
+- tapOn:
+    point: "37%,96%"
 - extendedWaitUntil:
     visible: "Who are you lending to?"
     timeout: 8000

@@ -3,7 +3,7 @@
 **Status:** Cleaned and ready for integration  
 **Source:** Rork platform export  
 **Cleaned:** Removed all Rork SDK dependencies  
-**Updated:** Design system aligned with Lovable aesthetic
+**Updated:** Design system aligned with brand palette
 
 ---
 
@@ -57,13 +57,13 @@ app/
 - React Native 0.76.5
 - React 18.3.1
 
-### 2. Colors - Lovable Design Applied
-**Before (Rork):**
+### 2. Colors - Brand Design Applied
+**Before R :**
 - Primary: #6B8F71 (cooler green)
 - Accent: #C49A87 (pinkish terracotta)
 - Cream: #FAF8F5
 
-**After (Lovable):**
+**After:**
 - Primary: #8B9D77 (warmer sage)
 - Accent: #C17C5F (deeper terracotta)
 - Cream: #FDFBF7 (warmer)
@@ -131,8 +131,8 @@ Currently uses `mocks/contacts.ts`. Need to:
 Keep `apps/mobile-salvaged/` as separate mobile app:
 ```
 apps/
-├── web/                    # Current Lovable web app
-├── mobile-salvaged/        # This Expo app
+├── web/                    
+├── mobile-salvaged/        
 └── ...
 ```
 
@@ -186,8 +186,8 @@ npx expo start --android
 
 | File | Status | Notes |
 |------|--------|-------|
-| `package.json` | ✅ Cleaned | Rork deps removed |
-| `constants/colors.ts` | ✅ Updated | Lovable palette applied |
+| `package.json` | ✅ Cleaned | R deps removed |
+| constants/colors.ts | ✅ Updated | Brand palette applied |
 | `app/_layout.tsx` | ⚠️ Needs work | Uses context hook pattern |
 | `providers/*` | ⚠️ Needs work | Context hook dependency |
 | `app/(tabs)/*.tsx` | ✅ Ready | No Rork dependencies |

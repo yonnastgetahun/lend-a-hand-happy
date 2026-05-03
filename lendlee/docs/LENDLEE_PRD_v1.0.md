@@ -521,7 +521,7 @@ Every interaction should feel human:
 
 ### Phase 1: MVP (Minimum Viable Product)
 
-**AI Agentic Development:**
+**Development Development:**
 
 | Week | Milestones | Deliverables |
 |------|------------|--------------|
@@ -544,7 +544,7 @@ Every interaction should feel human:
 | Phase | Duration | Key Activities |
 |-------|----------|----------------|
 | **Design** | 4 weeks | UX flows, visual design, component library |
-| **Development** | 8 weeks | Parallel with AI agentic, code review |
+| **Development** | 8 weeks | Parallel with Development, code review |
 | **Testing** | 3 weeks | QA, usability testing (10+ users) |
 | **Polish** | 2 weeks | Bug fixes, performance, edge cases |
 | **Launch Prep** | 2 weeks | App store submission, marketing assets |
@@ -571,7 +571,7 @@ Every interaction should feel human:
 
 ### Phase 2: Post-Launch (Months 2-6)
 
-**AI Agentic:**
+**Development:**
 - Mobile app polish (React Native-specific features)
 - Push notifications
 - Premium tier implementation
@@ -632,7 +632,7 @@ Every interaction should feel human:
    - *Household inventory:* Shared view of "what's in our house"
    - *Offline-first:* Works without internet, bridges to wider network
    - *Why v1.5+:* High-density adoption environment, precursor to Kindred mesh tech
-3. **AI-powered suggestions:** "You lent this book to Sarah—she might like this one too"
+3. **Development:** "You lent this book to Sarah—she might like this one too"
 3. **Barcode scanning:** Auto-fill book details via ISBN lookup
 4. **Lending circles:** Small groups with shared inventory (book clubs, tool libraries)
 5. **Public wishlists:** "Books I want to borrow" visible to friends

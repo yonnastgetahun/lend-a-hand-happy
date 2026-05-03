@@ -7,7 +7,9 @@ appId: ${APP_ID}
 - runFlow: "login.yaml"
 
 # Step 2: Lend an item first (so we have a loan to remind about)
-- tapOn: "${TAB_LEND}"
+# Lend tab (2nd tab, coordinate tap)
+- tapOn:
+    point: "37%,96%"
 - extendedWaitUntil:
     visible: "Who are you lending to?"
     timeout: 8000
@@ -62,10 +64,20 @@ appId: ${APP_ID}
     timeout: 10000
 
 # Step 3: Navigate to Home tab and find the loan
-- tapOn: "${TAB_HOME}"
+# My Items tab (1st tab, coordinate tap)
+- tapOn:
+    point: "12%,96%"
 - extendedWaitUntil:
     visible: "My Items"
     timeout: 8000
+
+# Wait for Supabase data to sync and home screen to refresh
+- waitForAnimationToEnd
+- scroll
+- scrollUntilVisible:
+    element: "Hammer"
+    direction: DOWN
+    timeout: 15000
 
 # Tap on the loan card we just created (by item name)
 - tapOn: "Hammer"

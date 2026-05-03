@@ -34,7 +34,7 @@ Lendlee handles the logistics so you can focus on the connection.
 ### v1.5+ (Future)
 - **Promote & Recommend** - Share knowledge and trusted referrals
 - **Offline Housemate Connect** - Local network discovery for roommates/households
-- **AI Suggestions** - Smart recommendations based on lending history
+- **Suggestions** - Smart recommendations based on lending history
 - **Barcode Scanning** - Auto-fill book details
 
 ## Technical Stack

@@ -7,13 +7,20 @@ appId: ${APP_ID}
 # Verify home content
 - assertVisible: "My Items"
 
-# Tab bar navigation (env vars handle iOS/Android text differences)
-- tapOn: "${TAB_PROFILE}"
+# Tab bar navigation — coordinate taps (iOS tab labels not reliably in view hierarchy)
+# Tab bar layout: 4 tabs evenly spaced at ~96% Y
+# Tab 1 (My Items): 12.5% X | Tab 2 (Lend): 37.5% X | Tab 3 (History): 62.5% X | Tab 4 (Profile): 87.5% X
+
+# Tap Profile tab
+- tapOn:
+    point: "87%,96%"
 - extendedWaitUntil:
     visible: "Settings"
     timeout: 8000
 
-- tapOn: "${TAB_LEND}"
+# Tap Lend tab
+- tapOn:
+    point: "37%,96%"
 
 # Dismiss contacts permission if prompted
 - runFlow:
@@ -26,4 +33,6 @@ appId: ${APP_ID}
     visible: "Who are you lending to?"
     timeout: 8000
 
-- tapOn: "${TAB_HOME}"
+# Tap My Items tab
+- tapOn:
+    point: "12%,96%"
