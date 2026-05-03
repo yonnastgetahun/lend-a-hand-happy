@@ -332,7 +332,7 @@ All scenarios are acceptable. The separation allows each product to find its own
 
 ### Lendlee Timeline
 
-**AI Agentic Development:**
+**Development:**
 - Duration: 6-8 weeks for MVP
 - Key milestones: Core flows, backend integration, auth, item tracking
 - Parallelization: UI components + backend + auth simultaneously
@@ -352,7 +352,7 @@ All scenarios are acceptable. The separation allows each product to find its own
 
 **Phase 0: Technical PoC (BLE Mesh Validation)**
 
-*AI Agentic:*
+Development:
 - Duration: 8-12 weeks
 - Key milestones: 5+ device mesh connectivity, basic message relay
 - Parallelization: iOS BLE research + Android BLE research + protocol design
@@ -366,7 +366,7 @@ All scenarios are acceptable. The separation allows each product to find its own
 
 **Phase 1: Nostr Identity & Messaging (v1.0)**
 
-*AI Agentic:*
+Development:
 - Duration: 12-16 weeks
 - Key milestones: HSM key generation, BIP-39 backup, basic Nostr integration
 - Parallelization: iOS security + Android security + relay integration

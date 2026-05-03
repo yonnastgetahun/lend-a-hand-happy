@@ -205,7 +205,7 @@ npx expo start --android
 3. **Integrate backend** - Add Firebase/Supabase per PRD v1.0
 4. **Add real contacts** - Replace mocks with real data source
 5. **Setup notifications** - Complete reminder system
-6. **Design polish** - Further align with Lovable aesthetic (typography, spacing)
+6. **Design polish** - Further align with brand aesthetic (typography, spacing)
 
 ---
 

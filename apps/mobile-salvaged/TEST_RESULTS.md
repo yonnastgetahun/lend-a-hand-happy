@@ -345,7 +345,7 @@ type ItemStatus = 'available' | 'lent' | 'returned'; // ❌ Missing 'given'
 1. **Core Architecture** - Clean, scalable, professional
 2. **Add Item Flow** - Delightful photo capture, warm UI
 3. **Lending Workflow** - 3-step process is intuitive
-4. **Visual Design** - Matches Lovable aesthetic perfectly
+4. **Visual Design** - Matches brand aesthetic perfectly
 5. **Local Persistence** - AsyncStorage works reliably
 6. **Stats Dashboard** - "Total/Available/Lent" is motivating
 
