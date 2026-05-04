@@ -47,10 +47,15 @@ const Footer = () => {
               Built with care for communities who share freely.
             </p>
 
-            {/* Copyright */}
-            <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
-              Made with <Heart className="w-3 h-3 text-accent fill-accent" /> for neighbors everywhere · © {new Date().getFullYear()} Lendlee
-            </p>
+            {/* Credits */}
+            <div className="flex flex-col items-center gap-1">
+              <p className="text-center text-xs text-muted-foreground">
+                App Concept by D. Lindsay
+              </p>
+              <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
+                Made with <Heart className="w-3 h-3 text-accent fill-accent" /> for neighbors everywhere by PulseCollabAgency · © {new Date().getFullYear()} Lendlee
+              </p>
+            </div>
           </div>
         </div>
       </div>
