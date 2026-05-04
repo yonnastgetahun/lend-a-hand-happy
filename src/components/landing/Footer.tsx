@@ -53,7 +53,16 @@ const Footer = () => {
                 App Concept by D. Lindsay
               </p>
               <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1">
-                Made with <Heart className="w-3 h-3 text-accent fill-accent" /> for neighbors everywhere by PulseCollabAgency · © {new Date().getFullYear()} Lendlee
+                Made with <Heart className="w-3 h-3 text-accent fill-accent" /> for neighbors everywhere by{" "}
+                <a
+                  href="https://www.pulsecollabagency.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="hover:text-primary transition-colors underline-offset-2 hover:underline"
+                >
+                  PulseCollabAgency
+                </a>{" "}
+                · © {new Date().getFullYear()} Lendlee
               </p>
             </div>
           </div>
