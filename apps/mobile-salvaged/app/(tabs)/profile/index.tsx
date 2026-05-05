@@ -11,10 +11,11 @@ import {
 } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LogOut, Heart, Bell, Shield, HelpCircle, ChevronRight } from 'lucide-react-native';
+import { LogOut, Heart, Bell, Shield, HelpCircle, ChevronRight, Trash2 } from 'lucide-react-native';
 import Colors from '@/constants/colors';
 import { useAuth } from '@/providers/AuthProvider';
 import { useLendlee } from '@/providers/LendleeProvider';
+import { supabase } from '@/lib/supabase';
 import { getInitials } from '@/utils/categories';
 
 const REMINDERS_STORAGE_KEY = 'lendlee.remindersEnabled';
@@ -63,6 +64,42 @@ export default function ProfileScreen() {
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Log Out', style: 'destructive', onPress: () => logout() },
+      ]
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'This will permanently delete your account and all your data (items, loans, contacts). This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete Account',
+          style: 'destructive',
+          onPress: () => {
+            Alert.alert(
+              'Are you sure?',
+              'All your data will be permanently deleted.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Yes, Delete',
+                  style: 'destructive',
+                  onPress: async () => {
+                    try {
+                      const { error } = await supabase.rpc('delete_user_account');
+                      if (error) throw error;
+                      await logout();
+                    } catch (e: any) {
+                      Alert.alert('Error', e.message || 'Failed to delete account. Please try again.');
+                    }
+                  },
+                },
+              ]
+            );
+          },
+        },
       ]
     );
   };
@@ -148,6 +185,18 @@ export default function ProfileScreen() {
         >
           <LogOut size={20} color={Colors.destructive} />
           <Text style={styles.logoutText}>Log Out</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.section}>
+        <TouchableOpacity
+          style={styles.deleteButton}
+          onPress={handleDeleteAccount}
+          activeOpacity={0.7}
+          testID="delete-account-button"
+        >
+          <Trash2 size={20} color={Colors.destructive} />
+          <Text style={styles.deleteText}>Delete Account</Text>
         </TouchableOpacity>
       </View>
 
@@ -286,6 +335,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600' as const,
     color: Colors.destructive,
+  },
+  deleteButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+    backgroundColor: Colors.white,
+    borderRadius: 14,
+    paddingVertical: 16,
+    borderWidth: 1,
+    borderColor: Colors.border,
+  },
+  deleteText: {
+    fontSize: 14,
+    fontWeight: '500' as const,
+    color: Colors.mutedForeground,
   },
   brandSection: {
     alignItems: 'center',

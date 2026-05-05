@@ -46,7 +46,6 @@ export default function AddItemScreen() {
     }
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert('Permission needed', 'Camera access is required to take photos.');
       return;
     }
     const result = await ImagePicker.launchCameraAsync({

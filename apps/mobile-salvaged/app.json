@@ -20,6 +20,7 @@
       "usesAppleSignIn": true,
       "infoPlist": {
         "NSContactsUsageDescription": "Lendlee uses your contacts only when you're picking someone to lend to. We never upload your contact list.",
+        "NSCameraUsageDescription": "Lendlee uses your camera to take a photo of an item you're lending, so you can visually identify it later. For example, snapping a picture of a book before lending it to a friend.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -56,13 +57,14 @@
           }
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      "@react-native-community/datetimepicker",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
-      "supabaseUrl": "https://divwsajiaxklbuehnzek.supabase.co",
       "router": {
         "origin": "https://lendlee.app"
       },
